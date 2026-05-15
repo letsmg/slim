@@ -1,0 +1,64 @@
+name: 🚀 Deploy Slim (Direto)
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🤐 Criar Pacote de Deploy
+        run: |
+          mkdir build-tmp
+          # COPIA A PASTA INTEIRA (mantendo a subpasta public para o Nginx encontrar)
+          cp -r public build-tmp/
+          # Copia o .htaccess para dentro da public se ele existir na raiz
+          [ -f .htaccess ] && cp .htaccess build-tmp/public/ || echo "Sem .htaccess na raiz"
+
+          cd build-tmp
+          zip -r ../deploy-slim.zip .
+          cd ..
+
+      - name: 🔑 Configure SSH
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          known_hosts: ${{ secrets.SSH_KNOWN_HOSTS }}
+
+      - name: 🚀 Executar Deploy no Servidor
+        run: |
+          SERVER_IP="${{ secrets.SERVER_IP }}"
+
+          scp -o StrictHostKeyChecking=no deploy-slim.zip ubuntu@$SERVER_IP:/tmp/
+
+          ssh -o StrictHostKeyChecking=no ubuntu@$SERVER_IP << 'EOF'
+            set -e
+
+            BASE_DIR="/var/www/slim"
+
+            # 1. Garante que a pasta base existe
+            sudo mkdir -p ${BASE_DIR}
+
+            # 2. Limpeza do conteúdo antigo (limpa inclusive a subpasta public antiga)
+            sudo rm -rf ${BASE_DIR}/*
+
+            # 3. Descompacta o novo pacote (criará a pasta /public dentro de BASE_DIR)
+            sudo unzip -o /tmp/deploy-slim.zip -d ${BASE_DIR}
+
+            # 4. Ajustar permissões para o Nginx
+            sudo chown -R www-data:www-data ${BASE_DIR}
+            sudo chmod -R 755 ${BASE_DIR}
+
+            # 5. Limpeza do arquivo temporário no servidor
+            sudo rm /tmp/deploy-slim.zip
+            
+            echo "✅ Deploy Slim Finalizado com estrutura /public!"
+          EOF
+
+      - name: 🧹 Cleanup Runner
+        if: always()
+        run: rm -rf build-tmp deploy-slim.zip

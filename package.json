@@ -1,0 +1,19 @@
+{
+  "name": "slim",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "axios": "^1.16.1",
+    "tailwind": "^4.0.0",
+    "typescript": "^5.0.0",
+    "vite": "^8.0.13"
+  }
+}
