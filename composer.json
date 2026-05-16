@@ -5,7 +5,9 @@
         "slim/psr7": "^1.8",
         "illuminate/database": "^13.9",
         "vlucas/phpdotenv": "^5.6",
-        "monolog/monolog": "^3.10"
+        "monolog/monolog": "^3.10",
+        "robmorgan/phinx": "^0.16.11",
+        "geoip2/geoip2": "^3.3"
     },
     "require-dev": {
         "phpunit/phpunit": "^11.0"
@@ -22,7 +24,14 @@
             "App\\Policies\\": "app/policies/",
             "App\\Middlewares\\": "app/middlewares/",
             "App\\Requests\\": "app/requests/",
-            "App\\Logging\\": "app/Logging/"
+            "App\\Logging\\": "app/Logging/",
+            "App\\Enums\\": "app/Enums/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "config/tests/",
+            "Database\\Seeders\\": "config/seeders/"
         }
     }
 }

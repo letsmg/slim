@@ -6,12 +6,17 @@ export default defineConfig({
     server: {
         port: 5175,
     },
+    // Expõe variáveis do .env com prefixo VITE_ para o frontend
+    define: {
+        'import.meta.env.VITE_IMG_PATH': JSON.stringify(process.env.APP_IMG_PATH || '/imgs'),
+    },
     plugins: [
         vue(),
         tailwindcss(),
     ],
     root: 'resources',
     base: '/',
+    publicDir: '../public',
 
     css: {
         devSourcemap: true,
@@ -23,16 +28,16 @@ export default defineConfig({
         rollupOptions: {
             input: 'resources/js/app.js',
             output: {
-                entryFileNames: 'js/[name]-[hash].min.js',
-                chunkFileNames: 'js/[name]-[hash].min.js',
+                entryFileNames: 'js/app.js',
+                chunkFileNames: 'js/[name].js',
                 assetFileNames: (assetInfo) => {
                     if (assetInfo.name.endsWith('.css')) {
-                        return 'css/[name]-[hash].min.css'
+                        return 'css/app.css'
                     }
                     if (assetInfo.name.endsWith('.woff2') || assetInfo.name.endsWith('.woff') || assetInfo.name.endsWith('.ttf')) {
                         return 'fonts/[name][extname]'
                     }
-                    return 'assets/[name]-[hash][extname]'
+                    return 'assets/[name][extname]'
                 },
             },
         },
@@ -46,6 +51,11 @@ export default defineConfig({
             '@user': '/js/pages/user',
             '@product': '/js/pages/product',
             '@report': '/js/pages/report',
+            '@vehicle': '/js/pages/vehicle',
+            '@driver': '/js/pages/driver',
+            '@mechanic': '/js/pages/mechanic',
+            '@trip': '/js/pages/trip',
+            '@maintenance': '/js/pages/maintenance',
         },
     },
 })

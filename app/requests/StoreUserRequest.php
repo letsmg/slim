@@ -1,4 +1,4 @@
-nto d<?php
+<?php
 
 namespace App\Requests;
 

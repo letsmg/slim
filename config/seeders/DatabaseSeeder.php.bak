@@ -1,0 +1,19 @@
+<?php
+
+namespace Database\Seeders;
+
+use Phinx\Seed\AbstractSeed;
+
+class DatabaseSeeder extends AbstractSeed
+{
+    public function run(): void
+    {
+        // Limpa todas as tabelas na ordem correta (filhos primeiro)
+        $this->execute("TRUNCATE TABLE scheduled_maintenances RESTART IDENTITY CASCADE");
+        $this->execute("TRUNCATE TABLE trips RESTART IDENTITY CASCADE");
+        $this->execute("TRUNCATE TABLE mechanics RESTART IDENTITY CASCADE");
+        $this->execute("TRUNCATE TABLE drivers RESTART IDENTITY CASCADE");
+        $this->execute("TRUNCATE TABLE vehicles RESTART IDENTITY CASCADE");
+        $this->execute("TRUNCATE TABLE users RESTART IDENTITY CASCADE");
+    }
+}

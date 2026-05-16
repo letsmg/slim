@@ -6,6 +6,11 @@ const DashboardPage = () => import('@pages/DashboardPage.vue')
 const UserIndex = () => import('@user/UserIndex.vue')
 const ProductIndex = () => import('@product/ProductIndex.vue')
 const ReportIndex = () => import('@report/ReportIndex.vue')
+const VehicleIndex = () => import('@vehicle/VehicleIndex.vue')
+const DriverIndex = () => import('@driver/DriverIndex.vue')
+const MechanicIndex = () => import('@mechanic/MechanicIndex.vue')
+const TripIndex = () => import('@trip/TripIndex.vue')
+const ScheduledMaintenanceIndex = () => import('@maintenance/ScheduledMaintenanceIndex.vue')
 
 /**
  * Configuração de rotas do Vue Router
@@ -15,7 +20,7 @@ const ReportIndex = () => import('@report/ReportIndex.vue')
  *   /, /login, /register
  * 
  * Rotas autenticadas (layout AuthHeader/AuthFooter):
- *   /dashboard, /usuarios, /produtos, /relatorios
+ *   /dashboard, /usuarios, /produtos, /relatorios, /veiculos, /motoristas, /mecanicos, /viagens, /manutencoes
  */
 const routes = [
     // === Rotas Públicas (layout padrão) ===
@@ -62,6 +67,36 @@ const routes = [
         name: 'reports.index',
         component: ReportIndex,
         meta: { title: 'Relatórios', auth: true },
+    },
+    {
+        path: '/veiculos',
+        name: 'vehicles.index',
+        component: VehicleIndex,
+        meta: { title: 'Veículos', auth: true },
+    },
+    {
+        path: '/motoristas',
+        name: 'drivers.index',
+        component: DriverIndex,
+        meta: { title: 'Motoristas', auth: true },
+    },
+    {
+        path: '/mecanicos',
+        name: 'mechanics.index',
+        component: MechanicIndex,
+        meta: { title: 'Mecânicos', auth: true },
+    },
+    {
+        path: '/viagens',
+        name: 'trips.index',
+        component: TripIndex,
+        meta: { title: 'Viagens', auth: true },
+    },
+    {
+        path: '/manutencoes',
+        name: 'scheduled-maintenances.index',
+        component: ScheduledMaintenanceIndex,
+        meta: { title: 'Manutenções', auth: true },
     },
 
     // Rota coringa para 404

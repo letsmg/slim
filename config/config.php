@@ -2,10 +2,11 @@
 
 return [
     'app' => [
-        'name'  => $_ENV['APP_NAME'] ?? 'SlimApp',
-        'env'   => $_ENV['APP_ENV'] ?? 'production',
-        'debug' => (bool) ($_ENV['APP_DEBUG'] ?? false),
-        'url'   => $_ENV['APP_URL'] ?? 'http://localhost',
+        'name'     => $_ENV['APP_NAME'] ?? 'SlimApp',
+        'env'      => $_ENV['APP_ENV'] ?? 'production',
+        'debug'    => (bool) ($_ENV['APP_DEBUG'] ?? false),
+        'url'      => $_ENV['APP_URL'] ?? 'http://localhost',
+        'img_path' => $_ENV['APP_IMG_PATH'] ?? '/imgs',
     ],
 
     'database' => [

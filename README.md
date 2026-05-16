@@ -1,8 +1,8 @@
-# Slim App - Sistema de Gerenciamento
+# Slim Fleet - Sistema de Gerenciamento de Frota
 
 > **Projeto gerado com auxílio de IA e revisado por [Luiz Eduardo](https://github.com/letsmg).**
 
-Sistema completo de gerenciamento com autenticação, CRUD de usuários, produtos e relatórios. Construído com **Slim Framework 4** (PHP) no backend e **Vue 3 + Tailwind CSS** no frontend, utilizando **Vite** como bundler para compilação dos assets.
+Sistema completo de gerenciamento de frotas com autenticação, CRUD de usuários, veículos, motoristas, mecânicos, viagens e manutenções programadas. Construído com **Slim Framework 4** (PHP) no backend e **Vue 3 + Tailwind CSS** no frontend, utilizando **Vite** como bundler para compilação dos assets.
 
 ## Stack Tecnológica
 
@@ -23,56 +23,69 @@ Sistema completo de gerenciamento com autenticação, CRUD de usuários, produto
 |--------|-----------|
 | `vue` | Framework frontend Vue 3 (Composition API) |
 | `vue-router` | Roteamento SPA com lazy loading |
-| `pinia` | Gerenciamento de estado |
 | `vite` | Bundler e dev server com HMR |
 | `tailwindcss` | Framework CSS utility-first v4 |
 | `@tailwindcss/vite` | Plugin Tailwind para Vite |
-| `axios` | HTTP client com interceptors CSRF |
-| `sass` | Pré-processador SCSS |
 
 ## Estrutura do Projeto
 
 ```
 ├── app/
-│   ├── controllers/        # Controladores REST (User, Product, Report)
-│   ├── models/             # Modelos Eloquent (User, Product)
-│   ├── repositories/       # Camada de acesso a dados (User, Product, Report)
-│   ├── services/           # Lógica de negócio (User, Product, Report)
-│   ├── requests/           # Validação de entrada (StoreUser, StoreProduct)
+│   ├── controllers/        # Controladores REST (User, Product, Report, Vehicle, Driver, Mechanic, Trip, ScheduledMaintenance)
+│   ├── models/             # Modelos Eloquent (User, Product, Vehicle, Driver, Mechanic, Trip, ScheduledMaintenance)
+│   ├── repositories/       # Camada de acesso a dados
+│   ├── services/           # Lógica de negócio
+│   ├── requests/           # Validação de entrada (StoreUser, StoreProduct, StoreVehicle, StoreDriver)
 │   ├── policies/           # Regras de autorização
 │   ├── middlewares/        # Middlewares PSR-15
 │   └── helpers.php         # Funções auxiliares (sanitização, hash, escape)
 ├── config/
 │   ├── config.php          # Configurações (lê variáveis do .env)
-│   └── routes.php          # Definição de rotas API + SPA fallback
+│   ├── routes.php          # Definição de rotas API + SPA fallback
+│   ├── seeders/            # Seeders do Phinx (Database, Users, Vehicles, Drivers, Mechanics, Trips, ScheduledMaintenances)
+│   └── tests/              # Testes PHPUnit (SystemTest)
+├── db/
+│   └── migrations/         # Migrations do Phinx (create_users, create_vehicles, create_drivers, create_mechanics, create_trips, create_scheduled_maintenances)
 ├── public/
 │   ├── index.php           # Entry point da aplicação
 │   ├── index.html          # HTML servido para SPA
 │   ├── css/                # Assets CSS compilados (minificados com hash)
-│   └── js/                 # Assets JS compilados (minificados com hash)
+│   ├── js/                 # Assets JS compilados (minificados com hash)
+│   └── imgs/               # Atalho simbólico para resources/storage/app/public/imgs
 ├── resources/
 │   ├── index.html          # Entry HTML do Vite (dev)
+│   ├── storage/app/public/imgs/  # Imagens do sistema (banner, logos)
 │   ├── css/
 │   │   └── app.css         # Estilos Tailwind (entry point)
 │   └── js/
-│       ├── app.js          # Entry point JS Vue + Pinia + Router
+│       ├── app.js          # Entry point JS Vue + Router
 │       ├── services/
 │       │   └── api.js      # Instância Axios configurada
 │       ├── router/
 │       │   └── index.js    # Vue Router (lazy loading + guards)
-│       ├── components/
-│       │   └── App.vue     # Componente raiz (Header + RouterView + Footer)
 │       ├── layouts/
-│       │   ├── Header.vue  # Header responsivo com menu mobile
+│       │   ├── Header.vue  # Header público
+│       │   ├── AuthHeader.vue  # Header autenticado com menu completo
 │       │   └── Footer.vue  # Footer com links institucionais
 │       └── pages/
-│           ├── HomePage.vue            # Dashboard inicial
+│           ├── HomePage.vue            # Página inicial com banner e features
+│           ├── DashboardPage.vue       # Dashboard do painel
 │           ├── user/
-│           │   └── UserIndex.vue       # CRUD Usuários (tabela)
+│           │   └── UserIndex.vue       # CRUD Usuários
 │           ├── product/
-│           │   └── ProductIndex.vue    # CRUD Produtos (grid cards)
-│           └── report/
-│               └── ReportIndex.vue     # Relatórios (métricas + tabelas)
+│           │   └── ProductIndex.vue    # CRUD Produtos
+│           ├── report/
+│           │   └── ReportIndex.vue     # Relatórios
+│           ├── vehicle/
+│           │   └── VehicleIndex.vue    # CRUD Veículos
+│           ├── driver/
+│           │   └── DriverIndex.vue     # CRUD Motoristas
+│           ├── mechanic/
+│           │   └── MechanicIndex.vue   # CRUD Mecânicos
+│           ├── trip/
+│           │   └── TripIndex.vue       # CRUD Viagens
+│           └── maintenance/
+│               └── ScheduledMaintenanceIndex.vue  # CRUD Manutenções Programadas
 ├── .env                    # Variáveis de ambiente
 ├── vite.config.js          # Configuração do Vite (build, aliases)
 ├── composer.json           # Dependências PHP
@@ -93,7 +106,7 @@ Sistema completo de gerenciamento com autenticação, CRUD de usuários, produto
 
 - Hash de senhas com **Argon2id** (memory_cost 64MB, time_cost 4, threads 3)
 - Sanitização de entrada com `strip_tags()` + `trim()` em todas as entradas
-- Escape de saída com `htmlspecialchars()` (função `e()`)
+- Escape de saída com `htmlspecialchars()` (função `esc()`)
 - Proteção contra Mass Assignment (Eloquent `$fillable`)
 - Sessões configuradas com `httpOnly`, `SameSite=Lax`, `use_strict_mode`
 - Token CSRF automático via meta tag
@@ -116,10 +129,16 @@ composer install
 # 4. Instalar dependências frontend
 npm install
 
-# 5. Compilar assets para produção
+# 5. Criar link simbólico para imagens
+npm run storage:link
+
+# 6. Executar migrations e seeders
+npm run migrate:fresh
+
+# 7. Compilar assets para produção
 npm run build
 
-# 6. Iniciar servidor embutido do PHP
+# 8. Iniciar servidor embutido do PHP
 php -S localhost:8080 -t public/
 ```
 
@@ -129,7 +148,12 @@ php -S localhost:8080 -t public/
 |---------|-----------|
 | `npm run dev` | Inicia servidor de desenvolvimento Vite com HMR |
 | `npm run build` | Compila JS/CSS para produção em `public/js/` e `public/css/` (minificado com hash) |
-| `npm run preview` | Preview local da build de produção |
+| `npm run prod` | Compila JS/CSS para produção (alias para build) |
+| `npm run storage:link` | Cria atalho simbólico `public/imgs` → `resources/storage/app/public/imgs` |
+| `npm run migrate` | Executa as migrations pendentes |
+| `npm run seed` | Executa os seeders |
+| `npm run migrate:fresh` | Rollback total + migrate + seed |
+| `npm run test` | Executa os testes PHPUnit |
 | `composer dump-autoload` | Recarrega autoload PSR-4 |
 
 ## API Endpoints
@@ -156,6 +180,51 @@ GET    /api/products/{id}  # Busca produto por ID
 POST   /api/products       # Cria novo produto
 PUT    /api/products/{id}  # Atualiza produto
 DELETE /api/products/{id}  # Remove produto (soft delete)
+```
+
+### Veículos
+```
+GET    /api/vehicles       # Lista veículos
+GET    /api/vehicles/{id}  # Busca veículo por ID
+POST   /api/vehicles       # Cria novo veículo
+PUT    /api/vehicles/{id}  # Atualiza veículo
+DELETE /api/vehicles/{id}  # Remove veículo
+```
+
+### Motoristas
+```
+GET    /api/drivers        # Lista motoristas
+GET    /api/drivers/{id}   # Busca motorista por ID
+POST   /api/drivers        # Cria novo motorista
+PUT    /api/drivers/{id}   # Atualiza motorista
+DELETE /api/drivers/{id}   # Remove motorista
+```
+
+### Mecânicos
+```
+GET    /api/mechanics      # Lista mecânicos
+GET    /api/mechanics/{id} # Busca mecânico por ID
+POST   /api/mechanics      # Cria novo mecânico
+PUT    /api/mechanics/{id} # Atualiza mecânico
+DELETE /api/mechanics/{id} # Remove mecânico
+```
+
+### Viagens
+```
+GET    /api/trips          # Lista viagens
+GET    /api/trips/{id}     # Busca viagem por ID
+POST   /api/trips          # Cria nova viagem
+PUT    /api/trips/{id}     # Atualiza viagem
+DELETE /api/trips/{id}     # Remove viagem
+```
+
+### Manutenções Programadas
+```
+GET    /api/scheduled-maintenances       # Lista manutenções
+GET    /api/scheduled-maintenances/{id}  # Busca manutenção por ID
+POST   /api/scheduled-maintenances       # Cria nova manutenção
+PUT    /api/scheduled-maintenances/{id}  # Atualiza manutenção
+DELETE /api/scheduled-maintenances/{id}  # Remove manutenção
 ```
 
 ### Relatórios

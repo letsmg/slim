@@ -1,12 +1,10 @@
 <template>
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <!-- Título -->
         <div class="mb-8">
             <h1 class="text-2xl font-bold text-gray-900">Dashboard</h1>
             <p class="mt-1 text-sm text-gray-500">Bem-vindo, {{ userName }}. Aqui está um resumo do sistema.</p>
         </div>
 
-        <!-- Cards de Métricas -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <div v-for="metric in metrics" :key="metric.label"
                 class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
@@ -26,7 +24,6 @@
             </div>
         </div>
 
-        <!-- Grid de Acesso Rápido -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <router-link
                 to="/usuarios"
@@ -39,6 +36,32 @@
                 </div>
                 <h2 class="text-lg font-semibold text-gray-900 mb-2">Usuários</h2>
                 <p class="text-sm text-gray-500">Gerencie os usuários do sistema</p>
+            </router-link>
+
+            <router-link
+                to="/veiculos"
+                class="block p-6 bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md hover:border-emerald-300 transition-all group"
+            >
+                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4 group-hover:bg-blue-200 transition-colors">
+                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                    </svg>
+                </div>
+                <h2 class="text-lg font-semibold text-gray-900 mb-2">Veículos</h2>
+                <p class="text-sm text-gray-500">Gerencie os veículos da frota</p>
+            </router-link>
+
+            <router-link
+                to="/motoristas"
+                class="block p-6 bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md hover:border-emerald-300 transition-all group"
+            >
+                <div class="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center mb-4 group-hover:bg-teal-200 transition-colors">
+                    <svg class="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                </div>
+                <h2 class="text-lg font-semibold text-gray-900 mb-2">Motoristas</h2>
+                <p class="text-sm text-gray-500">Gerencie os motoristas cadastrados</p>
             </router-link>
 
             <router-link
@@ -73,7 +96,6 @@
 <script setup>
 import { inject } from 'vue'
 
-// Recebe dados do usuário via provide/inject do App.vue
 const authUser = inject('authUser', { name: 'Usuário' })
 const userName = authUser?.name || 'Usuário'
 

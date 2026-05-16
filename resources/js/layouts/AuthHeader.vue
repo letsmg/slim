@@ -2,15 +2,12 @@
     <header class="bg-gray-900 shadow-lg border-b border-gray-700">
         <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
-                <!-- Logo -->
                 <div class="flex-shrink-0 flex items-center">
                     <router-link to="/dashboard" class="text-xl font-bold text-emerald-400 hover:text-emerald-300 transition-colors">
                         Slim App
                     </router-link>
                     <span class="ml-3 px-2 py-0.5 text-xs font-medium bg-emerald-900 text-emerald-300 rounded-full">Painel</span>
                 </div>
-
-                <!-- Menu Desktop -->
                 <div class="hidden sm:flex sm:space-x-8">
                     <router-link
                         v-for="item in menuItems"
@@ -27,8 +24,6 @@
                         {{ item.label }}
                     </router-link>
                 </div>
-
-                <!-- Avatar / Logout Desktop -->
                 <div class="hidden sm:flex items-center space-x-4">
                     <div class="flex items-center space-x-3">
                         <div class="h-8 w-8 rounded-full bg-emerald-500 flex items-center justify-center">
@@ -49,8 +44,6 @@
                         </svg>
                     </button>
                 </div>
-
-                <!-- Botão Mobile -->
                 <div class="flex items-center sm:hidden">
                     <button
                         @click="mobileOpen = !mobileOpen"
@@ -65,8 +58,6 @@
                 </div>
             </div>
         </nav>
-
-        <!-- Menu Mobile -->
         <div v-show="mobileOpen" class="sm:hidden border-t border-gray-700">
             <div class="pt-2 pb-3 space-y-1">
                 <div class="px-4 py-3 border-b border-gray-700">
@@ -117,7 +108,6 @@ const route = useRoute()
 const router = useRouter()
 const mobileOpen = ref(false)
 
-// Props para receber dados do usuário autenticado
 const props = defineProps({
     user: {
         type: Object,
@@ -150,6 +140,31 @@ const menuItems = [
         label: 'Usuários',
         path: '/usuarios',
         icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z',
+    },
+    {
+        label: 'Veículos',
+        path: '/veiculos',
+        icon: 'M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4',
+    },
+    {
+        label: 'Motoristas',
+        path: '/motoristas',
+        icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z',
+    },
+    {
+        label: 'Viagens',
+        path: '/viagens',
+        icon: 'M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7',
+    },
+    {
+        label: 'Manutenções',
+        path: '/manutencoes',
+        icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z',
+    },
+    {
+        label: 'Mecânicos',
+        path: '/mecanicos',
+        icon: 'M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01',
     },
     {
         label: 'Produtos',

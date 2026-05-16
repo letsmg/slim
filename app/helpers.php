@@ -74,6 +74,23 @@ function needs_rehash(string $hash): bool
 }
 
 /**
+ * Escape de saída com htmlspecialchars (ISO 27001)
+ * Usar em todas as saídas de dados vindos do banco para o front-end
+ * Previne XSS (Cross-Site Scripting)
+ * 
+ * @param string|null $value Valor a ser escapado
+ * @param string $encoding Codificação (default UTF-8)
+ * @return string
+ */
+function esc(?string $value, string $encoding = 'UTF-8'): string
+{
+    if ($value === null) {
+        return '';
+    }
+    return htmlspecialchars($value, ENT_QUOTES | ENT_HTML5, $encoding, false);
+}
+
+/**
  * Gera um token seguro aleatório (para CSRF, reset de senha, etc.)
  */
 function generate_secure_token(int $length = 32): string

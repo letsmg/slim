@@ -2,25 +2,36 @@
 
 use Slim\Factory\AppFactory;
 use Illuminate\Database\Capsule\Manager as Capsule;
+use App\Controllers\VehicleController;
+use App\Controllers\DriverController;
+use App\Controllers\HomeController;
+use App\Controllers\MechanicController;
+use App\Controllers\TripController;
+use App\Controllers\ScheduledMaintenanceController;
+use App\Services\VehicleService;
+use App\Services\DriverService;
+use App\Services\MechanicService;
+use App\Services\TripService;
+use App\Services\ScheduledMaintenanceService;
+use App\Repositories\VehicleRepository;
+use App\Repositories\DriverRepository;
+use App\Repositories\MechanicRepository;
+use App\Repositories\TripRepository;
+use App\Repositories\ScheduledMaintenanceRepository;
 
 require __DIR__ . '/../vendor/autoload.php';
 
-// Carrega variáveis do .env com phpdotenv
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../');
 $dotenv->load();
 
-// Carrega a configuração
 $config = require __DIR__ . '/../config/config.php';
 
-// Inicializa o Logger do sistema (Monolog com RotatingFileHandler)
-// Usa APP_ENV do config para definir nível de log automático
 \App\Logging\Logger::channel('app')->info('Sistema iniciado', [
     'env'  => $config['app']['env'] ?? 'production',
     'php'  => PHP_VERSION,
     'host' => $_SERVER['HTTP_HOST'] ?? 'cli',
 ]);
 
-// Configura sessão segura
 if (session_status() === PHP_SESSION_NONE) {
     ini_set('session.use_strict_mode', '1');
     ini_set('session.use_only_cookies', '1');
@@ -32,7 +43,6 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Configura Eloquent ORM
 $capsule = new Capsule;
 $capsule->addConnection([
     'driver'    => $config['database']['connection'],
@@ -41,33 +51,61 @@ $capsule->addConnection([
     'database'  => $config['database']['database'],
     'username'  => $config['database']['username'],
     'password'  => $config['database']['password'],
-    'charset'   => 'utf8mb4',
-    'collation' => 'utf8mb4_unicode_ci',
+    'charset'   => 'utf8',
+    'collation' => 'utf8_unicode_ci',
     'prefix'    => '',
 ]);
 $capsule->setAsGlobal();
 $capsule->bootEloquent();
 
-$app = AppFactory::create();
+// DI manual - Veiculos
+$vehicleRepository = new VehicleRepository();
+$vehicleService = new VehicleService($vehicleRepository);
+$vehicleController = new VehicleController($vehicleService);
 
-// Adiciona body parsing middleware (para JSON, form data)
+// DI manual - Motoristas
+$driverRepository = new DriverRepository();
+$driverService = new DriverService($driverRepository);
+$driverController = new DriverController($driverService);
+
+// DI manual - Mecanicos
+$mechanicRepository = new MechanicRepository();
+$mechanicService = new MechanicService($mechanicRepository);
+$mechanicController = new MechanicController($mechanicService);
+
+// DI manual - Viagens
+$tripRepository = new TripRepository();
+$tripService = new TripService($tripRepository);
+$tripController = new TripController($tripService);
+
+// DI manual - Manutencoes Programadas
+$scheduledMaintenanceRepository = new ScheduledMaintenanceRepository();
+$scheduledMaintenanceService = new ScheduledMaintenanceService($scheduledMaintenanceRepository);
+$maintenanceController = new ScheduledMaintenanceController($scheduledMaintenanceService);
+
+$homeController = new HomeController();
+
+$app = AppFactory::create();
 $app->addBodyParsingMiddleware();
 
-// Middleware de erro (debug ativado apenas em ambiente local)
 $errorMiddleware = $app->addErrorMiddleware(
     (bool) ($config['app']['debug'] ?? false),
     true,
     true
 );
 
-// Carrega as rotas
 $routes = require __DIR__ . '/../config/routes.php';
-$routes($app);
+$routes($app, $vehicleController, $driverController, $homeController, $mechanicController, $tripController, $maintenanceController);
 
-// Carrega assets compilados pelo Vite (com cache via manifest.json)
-$viteAssets = vite_assets();
-
-// Disponibiliza para o template renderizado
-$app->getContainer()?->set('viteAssets', $viteAssets);
+// Fallback SPA: qualquer rota que não seja /api/* serve o index.html
+// Permite que o Vue Router gerencie as rotas do frontend
+$app->get('/[{params:.*}]', function ($request, $response) use ($homeController) {
+    $path = $request->getUri()->getPath();
+    if (str_starts_with($path, '/api/')) {
+        $response->getBody()->write(json_encode(['error' => 'Not found']));
+        return $response->withStatus(404)->withHeader('Content-Type', 'application/json');
+    }
+    return $homeController->index($request, $response);
+});
 
 $app->run();

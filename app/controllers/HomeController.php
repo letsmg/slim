@@ -8,20 +8,22 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 class HomeController
 {
     /**
-     * Página inicial com saída escapada contra XSS
+     * Página inicial - serve o SPA (Vue.js)
+     * Renderiza o index.html com os assets compilados pelo Vite
+     * Os arquivos app.css e app.js são referenciados diretamente no HTML
      */
     public function index(Request $request, Response $response): Response
     {
-        $name = $request->getQueryParams()['name'] ?? 'Slim';
+        $htmlPath = __DIR__ . '/../../public/index.html';
 
-        // Sanitiza entrada
-        $name = sanitize_input($name);
+        if (!file_exists($htmlPath)) {
+            $htmlPath = __DIR__ . '/../../resources/index.html';
+        }
 
-        // Escapa saída para evitar XSS
-        $message = 'Hello, ' . e($name) . '!';
+        $html = file_get_contents($htmlPath);
 
-        $response->getBody()->write($message);
-        return $response;
+        $response->getBody()->write($html);
+        return $response->withHeader('Content-Type', 'text/html; charset=utf-8');
     }
 
     /**
@@ -41,8 +43,8 @@ class HomeController
         // Monta resposta em JSON escapando os valores
         $payload = json_encode([
             'id'    => $user['id'],
-            'name'  => e($user['name']),
-            'email' => e($user['email']),
+            'name'  => esc($user['name']),
+            'email' => esc($user['email']),
         ], JSON_UNESCAPED_UNICODE);
 
         $response->getBody()->write($payload);
@@ -71,8 +73,8 @@ class HomeController
         // Simula processamento (em produção: salvar no banco)
         $result = json_encode([
             'message' => 'Contato recebido com sucesso',
-            'name'    => e($data['name'] ?? ''),
-            'email'   => e($data['email'] ?? ''),
+            'name'    => esc($data['name'] ?? ''),
+            'email'   => esc($data['email'] ?? ''),
         ], JSON_UNESCAPED_UNICODE);
 
         $response->getBody()->write($result);
