@@ -18,8 +18,8 @@
 <script setup>
 import { ref, provide, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import AuthHeader from '@layouts/AuthHeader.vue'
-import AuthFooter from '@layouts/AuthFooter.vue'
+import AuthHeader from '@components/AuthHeader.vue'
+import AuthFooter from '@components/AuthFooter.vue'
 
 const route = useRoute()
 const router = useRouter()
