@@ -7,7 +7,7 @@ return
 [
     'paths' => [
         'migrations' => '%%PHINX_CONFIG_DIR%%/db/migrations',
-        'seeds' => '%%PHINX_CONFIG_DIR%%/config/seeders'
+        'seeds' => '%%PHINX_CONFIG_DIR%%/db/seeders'
     ],
     'environments' => [
         'default_migration_table' => 'phinxlog',

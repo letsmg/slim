@@ -7,8 +7,8 @@
     "prod": "vite build",
     "storage:link": "php -r \"if(!is_dir('resources/storage/app/public')){mkdir('resources/storage/app/public',0755,true);} echo 'Diretorio criado.';\" && if not exist \"public\\imgs\" mklink /J \"public\\imgs\" \"resources\\storage\\app\\public\\imgs\" && if exist \"public\\imgs\" echo Link simbolico criado: public/imgs -> resources/storage/app/public/imgs",
     "migrate": "php vendor/bin/phinx migrate -e development",
-    "seed": "php config/seeders/run_seeds.php",
-    "migrate:fresh": "php vendor/bin/phinx rollback -e development -t 0 && php vendor/bin/phinx migrate -e development && php config/seeders/run_seeds.php",
+    "seed": "php db/seeders/run_seeds.php",
+    "migrate:fresh": "php vendor/bin/phinx rollback -e development -t 0 && php vendor/bin/phinx migrate -e development && php db/seeders/run_seeds.php",
     "test": "php vendor/bin/phpunit",
     "deploy": "npm run prod && copy /Y resources\\index.html public\\index.html && npm run migrate:fresh && npm run storage:link"
   },
