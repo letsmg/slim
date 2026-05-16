@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Phinx\Migration\AbstractMigration;
 
-final class CreateViagensTable extends AbstractMigration
+final class CreateTripsTable extends AbstractMigration
 {
     /**
      * Cria a tabela 'trips' (viagens)

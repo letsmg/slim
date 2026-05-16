@@ -1,19 +1,23 @@
 /**
  * Configurações centralizadas do frontend
  * 
- * As constantes são injetadas via meta tags no HTML
- * ou via variáveis de ambiente do Vite (VITE_*)
+ * As constantes são injetadas via variáveis de ambiente do Vite (VITE_*)
+ * ou usam valores padrão.
  */
 
-// Path base para imagens - configurado via .env (APP_IMG_PATH)
-// Padrão: /imgs
-export const IMG_PATH = import.meta.env.VITE_IMG_PATH || '/imgs'
+// URL base do servidor - configurado via .env (BASE_URL)
+export const BASE_URL = import.meta.env.VITE_BASE_URL || 'http://localhost:8000'
+
+// Path base para imagens - configurado via .env (PATH_IMG)
+export const PATH_IMG = import.meta.env.VITE_PATH_IMG || '/imgs'
 
 /**
- * Retorna o caminho completo para uma imagem
+ * Retorna a URL completa para uma imagem
+ * Usa caminho relativo quando possível, ou URL absoluta com BASE_URL
  * @param {string} filename - Nome do arquivo (ex: 'logo2.png')
- * @returns {string} Caminho completo (ex: '/imgs/logo2.png')
+ * @returns {string} Caminho da imagem (ex: '/imgs/logo2.png')
  */
 export function imgUrl(filename) {
-    return `${IMG_PATH}/${filename}`
+    // Usa caminho relativo para evitar problemas com VITE_* no build
+    return `${PATH_IMG}/${filename}`
 }

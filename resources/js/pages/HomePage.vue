@@ -4,7 +4,7 @@
     <header class="border-b border-slate-700/50 backdrop-blur-sm bg-slate-900/80 sticky top-0 z-50">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
         <div class="flex items-center space-x-3">
-          <img src="/imgs/logo2.png" alt="Slim App" class="h-10 w-auto drop-shadow-lg" />
+          <img :src="imgUrl('logo2.png')" alt="Slim App" class="h-10 w-auto drop-shadow-lg" />
           <span class="text-2xl font-bold bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">Slim App</span>
         </div>
         <nav class="flex items-center space-x-4">
@@ -63,7 +63,7 @@
           <div class="mt-12 lg:mt-0 animate-fade-in" style="animation-delay: 0.2s">
             <div class="relative group">
               <div class="absolute -inset-1 bg-gradient-to-r from-emerald-600 to-teal-600 rounded-2xl blur-xl opacity-30 group-hover:opacity-50 transition-opacity duration-500"></div>
-              <img src="/imgs/banner.png" alt="Banner Gerenciamento de Frotas" class="relative w-full rounded-xl shadow-2xl shadow-emerald-900/20 group-hover:scale-[1.02] transition-transform duration-500" />
+              <img :src="imgUrl('banner.png')" alt="Banner Gerenciamento de Frotas" class="relative w-full rounded-xl shadow-2xl shadow-emerald-900/20 group-hover:scale-[1.02] transition-transform duration-500" />
             </div>
           </div>
         </div>
@@ -126,7 +126,7 @@
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex flex-col md:flex-row items-center justify-between gap-6">
           <div class="flex items-center space-x-3">
-            <img src="/imgs/logo2.png" alt="Slim App" class="h-8 w-auto opacity-60" />
+            <img :src="imgUrl('logo2.png')" alt="Slim App" class="h-8 w-auto opacity-60" />
             <span class="text-sm text-slate-500">Slim App</span>
           </div>
           <div class="flex items-center space-x-6">

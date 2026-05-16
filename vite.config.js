@@ -8,7 +8,8 @@ export default defineConfig({
     },
     // Expõe variáveis do .env com prefixo VITE_ para o frontend
     define: {
-        'import.meta.env.VITE_IMG_PATH': JSON.stringify(process.env.APP_IMG_PATH || '/imgs'),
+        'import.meta.env.VITE_BASE_URL': JSON.stringify(process.env.BASE_URL || 'http://localhost:8000'),
+        'import.meta.env.VITE_PATH_IMG': JSON.stringify(process.env.PATH_IMG || '/imgs'),
     },
     plugins: [
         vue(),
