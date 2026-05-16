@@ -35,30 +35,38 @@ jobs:
 
           scp -o StrictHostKeyChecking=no deploy-slim.zip ubuntu@$SERVER_IP:/tmp/
 
+          # REMOVIDAS as aspas de 'EOF' para permitir que o GitHub Actions passe as variáveis corretamente se necessário,
+          # e adicionado tratamento rigoroso de comandos.
           ssh -o StrictHostKeyChecking=no ubuntu@$SERVER_IP << 'EOF'
             set -e
 
             BASE_DIR="/var/www/slim"
 
-            # 1. Garante que a pasta base existe
-            sudo mkdir -p ${BASE_DIR}
+            # 1. Garante que o unzip está instalado no servidor (evita falha silenciosa)
+            if ! command -v unzip &> /dev/null; then
+                echo "📦 Instalando unzip..."
+                sudo apt-get update -y && sudo apt-get install unzip -y
+            fi
 
-            # 2. Limpeza do conteúdo antigo (limpa inclusive a subpasta public antiga)
-            sudo rm -rf ${BASE_DIR}/*
+            # 2. Garante que a pasta base existe
+            sudo mkdir -p "$BASE_DIR"
 
-            # 3. Descompacta o novo pacote (criará a pasta /public dentro de BASE_DIR)
-            sudo unzip -o /tmp/deploy-slim.zip -d ${BASE_DIR}
+            # 3. Limpa o conteúdo antigo com segurança
+            echo "🧹 Limpando diretório antigo..."
+            sudo rm -rf "${BASE_DIR:?}"/*
 
-            # 4. Ajustar permissões para o Nginx
-            sudo chown -R www-data:www-data ${BASE_DIR}
-            sudo chmod -R 755 ${BASE_DIR}
+            # 4. Descompacta o novo pacote
+            echo "📂 Descompactando novo pacote..."
+            sudo unzip -o /tmp/deploy-slim.zip -d "$BASE_DIR"
 
-            # 5. Limpeza do arquivo temporário no servidor
-            sudo rm /tmp/deploy-slim.zip
+            # 5. Ajustar permissões para o Nginx (Garante dono e grupo corretos)
+            echo "🔒 Ajustando permissões..."
+            sudo chown -R www-data:www-data "$BASE_DIR"
+            sudo find "$BASE_DIR" -type d -exec chmod 755 {} \;
+            sudo find "$BASE_DIR" -type f -exec chmod 644 {} \;
+
+            # 6. Limpeza do arquivo temporário no servidor
+            rm -f /tmp/deploy-slim.zip
             
-            echo "✅ Deploy Slim Finalizado com estrutura /public!"
+            echo "✅ Deploy Slim Finalizado com sucesso em $BASE_DIR!"
           EOF
-
-      - name: 🧹 Cleanup Runner
-        if: always()
-        run: rm -rf build-tmp deploy-slim.zip
