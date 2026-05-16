@@ -113,8 +113,12 @@ const router = createRouter({
 })
 
 /**
- * Guard de navegação: atualiza título da página
- * Em produção, aqui também seria verificado token de autenticação
+ * Guard de navegação: protege rotas autenticadas e atualiza título
+ * 
+ * Regras:
+ * - Rotas com meta.auth = true só podem ser acessadas com sessão ativa
+ * - Se não houver sessão, redireciona para a página principal (/)
+ * - A sessão é verificada via sessionStorage (setada no login)
  */
 router.beforeEach((to, from, next) => {
     // Atualiza título da página
@@ -122,11 +126,14 @@ router.beforeEach((to, from, next) => {
         ? `${to.meta.title} | Slim App`
         : 'Slim App'
 
-    // TODO: implementar verificação de autenticação real
-    // Se a rota requer auth e usuário não está logado, redirecionar para /login
-    // if (to.meta?.auth && !isAuthenticated()) {
-    //     return next({ name: 'login' })
-    // }
+    // Verifica se a rota requer autenticação
+    if (to.meta?.auth) {
+        const isAuthenticated = sessionStorage.getItem('auth_token') || false
+        if (!isAuthenticated) {
+            // Redireciona para a página principal se não estiver logado
+            return next({ name: 'home' })
+        }
+    }
 
     next()
 })
