@@ -4,19 +4,25 @@
         "slim/slim": "4.*",
         "slim/psr7": "^1.8",
         "illuminate/database": "^13.9",
-        "vlucas/phpdotenv": "^5.6"
+        "vlucas/phpdotenv": "^5.6",
+        "monolog/monolog": "^3.10"
     },
     "require-dev": {
         "phpunit/phpunit": "^11.0"
     },
     "autoload": {
+        "files": [
+            "app/helpers.php"
+        ],
         "psr-4": {
             "App\\Controllers\\": "app/controllers/",
             "App\\Models\\": "app/models/",
             "App\\Repositories\\": "app/repositories/",
             "App\\Services\\": "app/services/",
             "App\\Policies\\": "app/policies/",
-            "App\\Middlewares\\": "app/middlewares/"
+            "App\\Middlewares\\": "app/middlewares/",
+            "App\\Requests\\": "app/requests/",
+            "App\\Logging\\": "app/Logging/"
         }
     }
 }

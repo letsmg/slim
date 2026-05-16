@@ -21,3 +21,14 @@ composer.lock
 
 # Logs
 *.log
+resources/storage/logs/*
+!resources/storage/.gitkeep
+
+# Storage symlink
+public/imgs
+
+# Vite manifest
+public/.vite/
+
+# Vite build cache
+node_modules/.vite/

@@ -1,1 +1,13 @@
-/* CSS entry point */
+@import "tailwindcss";
+
+/* Tailwind v4 usa a diretiva @theme para customizações */
+@theme {
+    --font-family-sans: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* Estilos base customizados usando classes utilitárias */
+@layer base {
+    html {
+        scroll-behavior: smooth;
+    }
+}
