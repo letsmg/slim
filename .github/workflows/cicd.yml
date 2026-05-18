@@ -19,13 +19,13 @@ jobs:
 
       - name: 📦 Instalar dependências do Node e Rodar Builds
         run: |
-          # 1. Instala as dependências do package.json de forma tolerante a desvios do lockfile
+          # 1. Instala as dependências padrão do seu projeto
           npm install
 
-          # 2. Garante a presença do plugin do Tailwind cobrado pelo Vite em ambiente limpo
-          npm install @tailwindcss/vite --save-dev
+          # 2. Força a instalação do Tailwind core e do plugin do Vite juntos no ambiente limpo
+          npm install tailwindcss @tailwindcss/vite --save-dev
 
-          # 3. Executa os passos do "npm run deploy" adaptados para o ecossistema Linux (Evitando comandos do Windows)
+          # 3. Executa os passos de compilação adaptados para o Linux (Evitando comandos do Windows)
           echo "🛠️ Rodando build de produção do Vite..."
           npm run prod
 
