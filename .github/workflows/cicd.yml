@@ -19,15 +19,18 @@ jobs:
 
       - name: 📦 Instalar dependências do Node e Rodar Builds
         run: |
-          # 1. Instala as dependências padrão do seu projeto
-          npm install
+          # 1. Limpa qualquer cache residual que possa estar amarrando versões antigas do Tailwind
+          npm cache clean --force
 
-          # 2. Força a instalação do Tailwind core e do plugin do Vite juntos no ambiente limpo
-          npm install tailwindcss @tailwindcss/vite --save-dev
+          # 2. Força a instalação explícita na raiz do runner ignorando conflitos de peer-dependencies
+          npm install tailwindcss @tailwindcss/vite --save-dev --legacy-peer-deps
 
-          # 3. Executa os passos de compilação adaptados para o Linux (Evitando comandos do Windows)
+          # 3. Instala o resto dos pacotes do seu package.json sem sobrescrever o Tailwind que injetamos acima
+          npm install --legacy-peer-deps
+
+          # 4. Executa os passos de compilação adaptados para o Linux
           echo "🛠️ Rodando build de produção do Vite..."
-          npm run prod
+          npx vite build
 
           echo "📄 Copiando index.html para o diretório público..."
           cp resources/index.html public/index.html 2>/dev/null || echo "Aviso: resources/index.html não encontrado, pulando..."
