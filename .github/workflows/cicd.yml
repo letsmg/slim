@@ -44,9 +44,6 @@ jobs:
           
           # Remove arquivos de desenvolvimento que não devem ir para produção
           rm -f build-tmp/public/hot
-          # Remove o index.html do Vite (usamos index.php com vite_assets())
-          rm -f build-tmp/public/index.html
-          
           cd build-tmp
           zip -r ../deploy-slim.zip .
           cd ..
