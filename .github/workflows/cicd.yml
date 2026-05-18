@@ -11,35 +11,11 @@ jobs:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
 
-      - name: 🟢 Configurar Node.js (Para os assets/frontend)
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'npm'
-
-      - name: 📦 Instalar dependências do Node e Rodar Builds
-        run: |
-          # 1. Limpa qualquer cache residual que possa estar amarrando versões antigas do Tailwind
-          npm cache clean --force
-
-          # 2. Força a instalação explícita na raiz do runner ignorando conflitos de peer-dependencies
-          npm install tailwindcss @tailwindcss/vite --save-dev --legacy-peer-deps
-
-          # 3. Instala o resto dos pacotes do seu package.json sem sobrescrever o Tailwind que injetamos acima
-          npm install --legacy-peer-deps
-
-          # 4. Executa os passos de compilação adaptados para o Linux
-          echo "🛠️ Rodando build de produção do Vite..."
-          npx vite build
-
-          echo "📄 Copiando index.html para o diretório público..."
-          cp resources/index.html public/index.html 2>/dev/null || echo "Aviso: resources/index.html não encontrado, pulando..."
-
       - name: 🤐 Criar Pacote de Deploy Estruturado
         run: |
           mkdir build-tmp
 
-          # 1. Copia todas as pastas estruturais necessárias para a execução
+          # 1. Copia todas as pastas estruturais e os assets já compilados localmente
           cp -r app config db public resources build-tmp/
 
           # 2. Copia arquivos vitais de configuração da raiz
@@ -99,10 +75,9 @@ jobs:
                     --prefer-dist
             fi
 
-            # 5. Executa os scripts NPM solicitados diretamente no ambiente do servidor
+            # 5. Executa os scripts NPM solicitados diretamente no ambiente do servidor (se necessário)
             echo "⚙️ Executando comandos Node no Servidor..."
             if command -v npm &> /dev/null; then
-                # Roda o link de armazenamento (ex: criar pasta de uploads/links simbólicos)
                 npm run storage:link --if-present || echo "⚠️ Script storage:link falhou ou não existe"
             else
                 echo "⚠️ Node/NPM não está instalado globalmente no servidor. Pulando comandos npm."
