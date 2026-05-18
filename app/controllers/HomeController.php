@@ -8,20 +8,24 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 
 class HomeController
 {
-    private Manifest $vite;
+    private ?Manifest $vite = null;
+    private bool $isDev = false;
 
     public function __construct()
     {
         // Detecta se está em modo dev (Vite rodando) ou produção
-        $isDev = $this->isViteRunning();
+        $this->isDev = $this->isViteRunning();
 
-        // Caminho do manifest.json gerado pelo Vite no build de produção
-        $manifestPath = __DIR__ . '/../../public/manifest.json';
-
-        // Base path dos assets (deve bater com o 'base' do vite.config.js)
-        $basePath = '/';
-
-        $this->vite = new Manifest($isDev, $manifestPath, $basePath);
+        if ($this->isDev) {
+            // Em modo dev, não precisa do manifest.json
+            $this->vite = new Manifest(true, '', '/');
+        } else {
+            // Em produção, tenta ler o manifest.json
+            $manifestPath = __DIR__ . '/../../public/manifest.json';
+            if (file_exists($manifestPath)) {
+                $this->vite = new Manifest(false, $manifestPath, '/');
+            }
+        }
     }
 
     /**
@@ -40,19 +44,31 @@ class HomeController
 
         $html = file_get_contents($htmlPath);
 
-        // Gera as tags do Vite para o entry point 'js/app.js'
-        $tags = $this->vite->createTags('js/app.js');
+        if ($this->vite !== null) {
+            // Gera as tags do Vite para o entry point 'js/app.js'
+            $tags = $this->vite->createTags('js/app.js');
 
-        // Substitui os placeholders no HTML
-        $html = str_replace(
-            ['<!-- VITE_JS -->', '<!-- VITE_CSS -->'],
-            [$tags->js, $tags->css],
-            $html
-        );
+            // Substitui os placeholders no HTML
+            $html = str_replace(
+                ['<!-- VITE_JS -->', '<!-- VITE_CSS -->'],
+                [$tags->js, $tags->css],
+                $html
+            );
+        } else {
+            // Fallback: usa os assets compilados diretamente
+            $html = str_replace(
+                ['<!-- VITE_JS -->', '<!-- VITE_CSS -->'],
+                [
+                    '<script type="module" src="/js/app.js"></script>',
+                    '<link rel="stylesheet" href="/css/app.css" />',
+                ],
+                $html
+            );
+        }
 
         $response->getBody()->write($html);
 
-        // Em modo dev, desabilita cache para garantir que o navegador sempre pegue a versão mais recente
+        // Desabilita cache para garantir que o navegador sempre pegue a versão mais recente
         $response = $response
             ->withHeader('Content-Type', 'text/html; charset=utf-8')
             ->withHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
