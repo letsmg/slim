@@ -54,16 +54,16 @@ export default defineConfig({
         rollupOptions: {
             input: '/js/app.js',
             output: {
-                entryFileNames: 'js/app.js',
-                chunkFileNames: 'js/[name].js',
+                entryFileNames: 'js/app.[hash].js',
+                chunkFileNames: 'js/[name].[hash].js',
                 assetFileNames: (assetInfo) => {
                     if (assetInfo.name.endsWith('.css')) {
-                        return 'css/app.css'
+                        return 'css/app.[hash].css'
                     }
                     if (assetInfo.name.endsWith('.woff2') || assetInfo.name.endsWith('.woff') || assetInfo.name.endsWith('.ttf')) {
                         return 'fonts/[name][extname]'
                     }
-                    return 'assets/[name][extname]'
+                    return 'assets/[name].[hash][extname]'
                 },
             },
         },

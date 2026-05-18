@@ -11,8 +11,12 @@
  * @param App\Controllers\ScheduledMaintenanceController $maintenanceController
  * @param App\Controllers\ReportController $reportController
  * @param App\Controllers\UserController $userController
+ * @param App\Controllers\AuthController $authController
  */
-return function ($app, $vehicleController, $driverController, $homeController, $mechanicController, $tripController, $maintenanceController, $reportController, $userController) {
+return function ($app, $vehicleController, $driverController, $homeController, $mechanicController, $tripController, $maintenanceController, $reportController, $userController, $authController) {
+    // Rotas da API - Autenticacao
+    $app->post('/api/auth/login', [$authController, 'login']);
+
     // Rotas da API - Usuarios
     $app->get('/api/users', [$userController, 'index']);
     $app->get('/api/users/{id}', [$userController, 'show']);

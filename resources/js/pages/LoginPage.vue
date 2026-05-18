@@ -134,6 +134,7 @@
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { imgUrl } from '../config.js'
+import api from '@/services/api'
 
 const router = useRouter()
 const loading = ref(false)
@@ -167,19 +168,35 @@ function selectUser(user) {
 }
 
 /**
- * Simula login - em produção chamaria a API
+ * Login real via API
  */
-function handleLogin() {
+async function handleLogin() {
   loading.value = true
   error.value = ''
 
-  // Simulação de chamada API
-  setTimeout(() => {
+  try {
+    const res = await api.post('/api/auth/login', {
+      email: form.email,
+      password: form.password,
+    })
+
+    const data = res.data
+
+    if (data.success && data.user) {
+      sessionStorage.setItem('auth_token', data.token || 'authenticated')
+      sessionStorage.setItem('user_name', data.user.name || '')
+      sessionStorage.setItem('user_email', data.user.email || '')
+      sessionStorage.setItem('user_level', data.user.level || 'operational')
+      router.push('/dashboard')
+    } else {
+      error.value = data.message || 'Credenciais inválidas'
+    }
+  } catch (e) {
+    const msg = e.response?.data?.message || e.response?.data?.error || 'Erro ao conectar ao servidor'
+    error.value = msg
+  } finally {
     loading.value = false
-    // Placeholder: redireciona para dashboard
-    sessionStorage.setItem('auth_token', 'simulado')
-    router.push('/dashboard')
-  }, 1000)
+  }
 }
 
 function levelBadgeClass(level) {

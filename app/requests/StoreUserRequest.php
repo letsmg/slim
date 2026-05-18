@@ -2,39 +2,20 @@
 
 namespace App\Requests;
 
+use App\Models\User;
+
 /**
  * Validação para criação/atualização de usuário
  * Segue ISO 27001: sanitização e validação rigorosa de entradas
  */
 class StoreUserRequest
 {
-    /**
-     * Regras de validação
-     * @var array
-     */
-    private array $rules = [
-        'name'     => 'required|string|max:255|sanitize',
-        'email'    => 'required|email|max:255|sanitize|unique:users,email',
-        'password' => 'required|string|min:8|max:128|strong_password',
-        'active'   => 'boolean',
-    ];
+    private ?int $ignoreId = null;
 
-    /**
-     * Mensagens de erro personalizadas
-     * @var array
-     */
-    private array $messages = [
-        'name.required'          => 'O nome é obrigatório.',
-        'name.max'               => 'O nome deve ter no máximo 255 caracteres.',
-        'email.required'         => 'O email é obrigatório.',
-        'email.email'            => 'Informe um email válido.',
-        'email.unique'           => 'Este email já está cadastrado.',
-        'password.required'      => 'A senha é obrigatória.',
-        'password.min'           => 'A senha deve ter no mínimo 8 caracteres.',
-        'password.max'           => 'A senha deve ter no máximo 128 caracteres.',
-        'password.strong_password' => 'A senha deve conter letras maiúsculas, minúsculas, números e caracteres especiais.',
-        'active.boolean'         => 'O status deve ser verdadeiro ou falso.',
-    ];
+    public function __construct(?int $ignoreId = null)
+    {
+        $this->ignoreId = $ignoreId;
+    }
 
     /**
      * Valida e sanitiza os dados de entrada
@@ -48,80 +29,50 @@ class StoreUserRequest
         $errors = [];
         $sanitized = [];
 
-        foreach ($this->rules as $field => $rules) {
-            $fieldRules = explode('|', $rules);
-            $value = $data[$field] ?? null;
+        // Validação de campos obrigatórios
+        if (empty($data['name']) || trim($data['name']) === '') {
+            $errors['name'] = 'O nome é obrigatório.';
+        } elseif (strlen($data['name']) > 255) {
+            $errors['name'] = 'O nome deve ter no máximo 255 caracteres.';
+        }
 
-            foreach ($fieldRules as $rule) {
-                // Sanitização
-                if ($rule === 'sanitize' && is_string($value)) {
-                    $value = sanitize_input($value);
-                }
-
-                // Validação required
-                if ($rule === 'required' && ($value === null || $value === '')) {
-                    $errors[$field] = $this->messages["{$field}.required"] ?? "O campo {$field} é obrigatório.";
-                    break;
-                }
-
-                // Validação string
-                if ($rule === 'string' && $value !== null && !is_string($value)) {
-                    $errors[$field] = "O campo {$field} deve ser texto.";
-                    break;
-                }
-
-                // Validação email
-                if ($rule === 'email' && $value !== null && $value !== '') {
-                    if (!validate_email($value)) {
-                        $errors[$field] = $this->messages["{$field}.email"] ?? "Informe um email válido.";
-                        break;
-                    }
-                }
-
-                // Validação min length
-                if (str_starts_with($rule, 'min:')) {
-                    $min = (int) substr($rule, 4);
-                    if (is_string($value) && strlen($value) < $min) {
-                        $errors[$field] = $this->messages["{$field}.min"] ?? "O campo {$field} deve ter no mínimo {$min} caracteres.";
-                        break;
-                    }
-                }
-
-                // Validação max length
-                if (str_starts_with($rule, 'max:')) {
-                    $max = (int) substr($rule, 4);
-                    if (is_string($value) && strlen($value) > $max) {
-                        $errors[$field] = $this->messages["{$field}.max"] ?? "O campo {$field} deve ter no máximo {$max} caracteres.";
-                        break;
-                    }
-                }
-
-                // Validação boolean
-                if ($rule === 'boolean' && $value !== null) {
-                    if (!in_array($value, [true, false, 0, 1, '0', '1'], true)) {
-                        $errors[$field] = $this->messages["{$field}.boolean"] ?? "O campo {$field} deve ser verdadeiro ou falso.";
-                        break;
-                    }
-                    $value = filter_var($value, FILTER_VALIDATE_BOOLEAN);
-                }
-
-                // Validação strong_password
-                if ($rule === 'strong_password' && is_string($value) && $value !== '') {
-                    if (!preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/', $value)) {
-                        $errors[$field] = $this->messages["{$field}.strong_password"];
-                        break;
-                    }
-                }
+        if (empty($data['email']) || trim($data['email']) === '') {
+            $errors['email'] = 'O email é obrigatório.';
+        } elseif (!validate_email($data['email'])) {
+            $errors['email'] = 'Informe um email válido.';
+        } elseif (strlen($data['email']) > 255) {
+            $errors['email'] = 'O email deve ter no máximo 255 caracteres.';
+        } else {
+            // Validação unique:users,email real
+            $query = User::where('email', sanitize_input($data['email']));
+            if ($this->ignoreId) {
+                $query->where('id', '!=', $this->ignoreId);
             }
-
-            if (!isset($errors[$field])) {
-                $sanitized[$field] = $value;
+            if ($query->exists()) {
+                $errors['email'] = 'Este email já está cadastrado.';
             }
+        }
+
+        if (!isset($data['password']) || $data['password'] === '') {
+            $errors['password'] = 'A senha é obrigatória.';
+        } elseif (strlen($data['password']) < 8) {
+            $errors['password'] = 'A senha deve ter no mínimo 8 caracteres.';
+        } elseif (strlen($data['password']) > 128) {
+            $errors['password'] = 'A senha deve ter no máximo 128 caracteres.';
+        } elseif (!preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/', $data['password'])) {
+            $errors['password'] = 'A senha deve conter letras maiúsculas, minúsculas, números e caracteres especiais.';
         }
 
         if (!empty($errors)) {
             throw new \InvalidArgumentException(json_encode(['errors' => $errors]));
         }
+
+        // Sanitiza saída
+        $sanitized['name'] = sanitize_input($data['name']);
+        $sanitized['email'] = sanitize_input($data['email']);
+        $sanitized['password'] = $data['password']; // será hasheado pelo mutator do model
+        $sanitized['level'] = $data['level'] ?? 'operational';
+        $sanitized['active'] = isset($data['active']) ? filter_var($data['active'], FILTER_VALIDATE_BOOLEAN) : true;
 
         return $sanitized;
     }

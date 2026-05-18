@@ -121,9 +121,13 @@ class StoreTripRequest
      * Valida as regras de jornada de trabalho do motorista
      * 
      * Regras:
-     * 1- Soma das viagens > 8h se intervalo < 1h entre viagens
-     * 2- Soma das viagens > 10h se intervalo < 2h entre viagens
+     * 1- Soma das viagens > 8h se intervalo < 1h entre viagens consecutivas
+     * 2- Soma das viagens > 10h se intervalo < 2h entre viagens consecutivas
      * 3- Nunca pode ultrapassar 10h de soma total
+     * 
+     * A validação considera a sequência real ordenada por departure_forecast,
+     * inserindo a nova viagem na posição correta para verificar intervalos
+     * entre viagens consecutivas.
      */
     private function validateWorkHours(array $data, array &$errors): void
     {
@@ -149,21 +153,49 @@ class StoreTripRequest
 
         $existingTrips = $query->orderBy('departure_forecast', 'asc')->get();
 
-        // Calcula soma total de horas incluindo a nova viagem
-        $totalHours = $newDuration;
-        $intervals = [];
-
+        // Monta lista de blocos de tempo (início, fim) ordenados
+        $blocks = [];
         foreach ($existingTrips as $trip) {
-            $tripDeparture = new \DateTime($trip->departure_forecast);
-            $tripArrival = new \DateTime($trip->arrival_forecast);
-            $tripDuration = ($tripArrival->getTimestamp() - $tripDeparture->getTimestamp()) / 3600;
+            $blocks[] = [
+                'start' => new \DateTime($trip->departure_forecast),
+                'end'   => new \DateTime($trip->arrival_forecast),
+            ];
+        }
 
-            $totalHours += $tripDuration;
+        // Insere a nova viagem na posição correta (ordenada por departure)
+        $inserted = false;
+        for ($i = 0; $i < count($blocks); $i++) {
+            if ($newDeparture < $blocks[$i]['start']) {
+                array_splice($blocks, $i, 0, [[
+                    'start' => $newDeparture,
+                    'end'   => $newArrival,
+                ]]);
+                $inserted = true;
+                break;
+            }
+        }
+        if (!$inserted) {
+            $blocks[] = [
+                'start' => $newDeparture,
+                'end'   => $newArrival,
+            ];
+        }
 
-            // Calcula intervalo entre a nova viagem e cada viagem existente
-            $interval1 = abs($newDeparture->getTimestamp() - $tripArrival->getTimestamp()) / 3600;
-            $interval2 = abs($tripDeparture->getTimestamp() - $newArrival->getTimestamp()) / 3600;
-            $intervals[] = min($interval1, $interval2);
+        // Calcula soma total de horas e verifica intervalos entre blocos consecutivos
+        $totalHours = 0;
+        $minInterval = PHP_FLOAT_MAX;
+
+        for ($i = 0; $i < count($blocks); $i++) {
+            $duration = ($blocks[$i]['end']->getTimestamp() - $blocks[$i]['start']->getTimestamp()) / 3600;
+            $totalHours += $duration;
+
+            // Calcula intervalo entre esta viagem e a próxima
+            if ($i < count($blocks) - 1) {
+                $gap = ($blocks[$i + 1]['start']->getTimestamp() - $blocks[$i]['end']->getTimestamp()) / 3600;
+                if ($gap < $minInterval) {
+                    $minInterval = $gap;
+                }
+            }
         }
 
         // Regra 3: Soma total nunca pode ultrapassar 10h
@@ -175,13 +207,10 @@ class StoreTripRequest
             return;
         }
 
-        // Encontra o menor intervalo entre a nova viagem e as existentes
-        $minInterval = !empty($intervals) ? min($intervals) : PHP_FLOAT_MAX;
-
-        // Regra 1: Soma > 8h se intervalo < 1h
+        // Regra 1: Soma > 8h se intervalo < 1h entre viagens consecutivas
         if ($totalHours > 8 && $minInterval < 1) {
             $errors['departure_forecast'] = sprintf(
-                'Jornada ultrapassa 8 horas (%.1f h) com intervalo de apenas %.1f h entre viagens. ' .
+                'Jornada ultrapassa 8 horas (%.1f h) com intervalo de apenas %.1f h entre viagens consecutivas. ' .
                 'É necessário intervalo mínimo de 1 hora.',
                 $totalHours,
                 $minInterval
@@ -189,10 +218,10 @@ class StoreTripRequest
             return;
         }
 
-        // Regra 2: Soma > 10h se intervalo < 2h (já validado pela regra 3, mas mantido para clareza)
+        // Regra 2: Soma > 10h se intervalo < 2h entre viagens consecutivas
         if ($totalHours > 10 && $minInterval < 2) {
             $errors['departure_forecast'] = sprintf(
-                'Jornada ultrapassa 10 horas (%.1f h) com intervalo de apenas %.1f h entre viagens. ' .
+                'Jornada ultrapassa 10 horas (%.1f h) com intervalo de apenas %.1f h entre viagens consecutivas. ' .
                 'É necessário intervalo mínimo de 2 horas.',
                 $totalHours,
                 $minInterval

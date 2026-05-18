@@ -10,6 +10,7 @@ use App\Controllers\TripController;
 use App\Controllers\ScheduledMaintenanceController;
 use App\Controllers\ReportController;
 use App\Controllers\UserController;
+use App\Controllers\AuthController;
 use App\Services\ReportService;
 use App\Services\VehicleService;
 use App\Services\DriverService;
@@ -101,6 +102,9 @@ $reportController = new ReportController($reportService);
 
 $homeController = new HomeController();
 
+// DI manual - Autenticacao
+$authController = new AuthController($userService);
+
 $app = AppFactory::create();
 $app->addBodyParsingMiddleware();
 
@@ -111,7 +115,7 @@ $errorMiddleware = $app->addErrorMiddleware(
 );
 
 $routes = require __DIR__ . '/../config/routes.php';
-$routes($app, $vehicleController, $driverController, $homeController, $mechanicController, $tripController, $maintenanceController, $reportController, $userController);
+$routes($app, $vehicleController, $driverController, $homeController, $mechanicController, $tripController, $maintenanceController, $reportController, $userController, $authController);
 
 // Fallback SPA: qualquer rota que não seja /api/* serve o index.html
 // Permite que o Vue Router gerencie as rotas do frontend
