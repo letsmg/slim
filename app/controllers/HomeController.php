@@ -2,105 +2,34 @@
 
 namespace App\Controllers;
 
-use mindplay\vite\Manifest;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
 class HomeController
 {
-    private ?Manifest $vite = null;
-    private bool $isDev = false;
-
-    public function __construct()
-    {
-        // Detecta se está em modo dev (Vite rodando) ou produção
-        $this->isDev = $this->isViteRunning();
-
-        if ($this->isDev) {
-            // Em modo dev, não precisa do manifest.json
-            $this->vite = new Manifest(true, '', '/');
-        } else {
-            // Em produção, tenta ler o manifest.json
-            $manifestPath = __DIR__ . '/../../public/manifest.json';
-            if (file_exists($manifestPath)) {
-                $this->vite = new Manifest(false, $manifestPath, '/');
-            }
-        }
-    }
-
     /**
-     * Página inicial - serve o SPA (Vue.js)
-     * Renderiza o index.html com os assets gerenciados pelo Vite
-     * Em dev: injeta scripts do Vite Dev Server (HMR)
-     * Em produção: usa manifest.json para cache busting
+     * Serve o index.html do SPA (Vue.js)
+     * O Vue Router gerencia todas as rotas do frontend
+     * A comunicação com o backend é feita via API (/api/*)
      */
     public function index(Request $request, Response $response): Response
     {
-        $htmlPath = __DIR__ . '/../../resources/index.html';
+        $htmlPath = __DIR__ . '/../../public/index.html';
 
         if (!file_exists($htmlPath)) {
-            $htmlPath = __DIR__ . '/../../public/index.html';
+            $response->getBody()->write('Index not found');
+            return $response->withStatus(500);
         }
 
         $html = file_get_contents($htmlPath);
 
-        if ($this->vite !== null) {
-            // Gera as tags do Vite para o entry point 'js/app.js'
-            $tags = $this->vite->createTags('js/app.js');
-
-            // Substitui os placeholders no HTML
-            $html = str_replace(
-                ['<!-- VITE_JS -->', '<!-- VITE_CSS -->'],
-                [$tags->js, $tags->css],
-                $html
-            );
-        } else {
-            // Fallback: usa os assets compilados diretamente
-            $html = str_replace(
-                ['<!-- VITE_JS -->', '<!-- VITE_CSS -->'],
-                [
-                    '<script type="module" src="/js/app.js"></script>',
-                    '<link rel="stylesheet" href="/css/app.css" />',
-                ],
-                $html
-            );
-        }
-
         $response->getBody()->write($html);
 
-        // Desabilita cache para garantir que o navegador sempre pegue a versão mais recente
-        $response = $response
+        return $response
             ->withHeader('Content-Type', 'text/html; charset=utf-8')
             ->withHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->withHeader('Pragma', 'no-cache')
             ->withHeader('Expires', '0');
-
-        return $response;
-    }
-
-    /**
-     * Verifica se o Vite Dev Server está rodando
-     * Tenta conectar na porta 5175 (IPv4 e IPv6)
-     */
-    private function isViteRunning(): bool
-    {
-        static $running = null;
-        if ($running !== null) {
-            return $running;
-        }
-
-        $hosts = ['127.0.0.1', '::1', 'localhost'];
-        foreach ($hosts as $host) {
-            $fp = @fsockopen($host, 5175, $errno, $errstr, 0.3);
-            if ($fp) {
-                fclose($fp);
-                $running = true;
-                return true;
-            }
-        }
-
-        $running = false;
-        return false;
     }
 
     /**

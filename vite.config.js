@@ -80,6 +80,20 @@ export default defineConfig({
             host: 'localhost',
             port: 5175,
         },
+        // Proxy: redireciona requisicoes de API para o PHP
+        proxy: {
+            // APIs do backend
+            '/api': {
+                target: 'http://localhost:8000',
+                changeOrigin: true,
+            },
+            // Rotas SPA que nao sao arquivos estaticos - redireciona para o PHP
+            // para que o fallback SPA funcione
+            '^/(login|register|dashboard|usuarios|produtos|relatorios|veiculos|motoristas|mecanicos|viagens|manutencoes|termos-de-uso|politica-de-privacidade)(/.*)?$': {
+                target: 'http://localhost:8000',
+                changeOrigin: true,
+            },
+        },
     },
     define: {
         'import.meta.env.VITE_BASE_URL': JSON.stringify(process.env.BASE_URL || 'http://localhost:8000'),
