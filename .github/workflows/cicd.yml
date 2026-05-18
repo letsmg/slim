@@ -35,7 +35,7 @@ jobs:
         run: |
           mkdir build-tmp
           # Copia as pastas estruturais necessárias
-          cp -r app config db public resources build-tmp/
+          cp -r app config db public resources storage build-tmp/
           # Copia arquivos vitais de configuração da raiz
           cp composer.json composer.lock phinx.php package.json build-tmp/ 2>/dev/null || true
           

@@ -37,6 +37,9 @@ Sanitização de Entrada: Aplicar strip_tags e trim (ou equivalentes da linguage
 
 Sanitização de Saída: Aplicar htmlspecialchars (ou mecanismos nativos de escape de contextos) na renderização ou envio de dados do banco para o front-end, mitigando riscos de XSS.
 
+
+considere que sempre faço deploys automaticos no github que geram os arquivos compilados no proprio github e só envia os arquivos css e js prontos para o servidor da oracle
+
 PART 2: ESPECIFICAÇÕES DO PROJETO (Gerenciador de Frotas)
 1. Arquitetura do Backend & Ecossistema Slim/Laravel/Flutter
 Micro-Framework Customizado: O projeto atual utiliza Slim Framework no backend focado em fornecer uma API REST limpa.
@@ -72,3 +75,4 @@ npm run dev - Inicializa o servidor de desenvolvimento do Vite (com Hot Module R
 npm run prod - Compila, minifica e gera os assets físicos de produção (na pasta public/), otimizando o carregamento quando o ambiente estiver configurado como production.
 
 💡 Instrução de Inicialização: Sempre verifique se o servidor embutido do PHP (php -S localhost:8000 -t public) e o servidor do frontend (npm run dev) estão ativos ao efetuar os testes locais na máquina de desenvolvimento. Se não estiverem abertos, execute-os imediatamente.
+
