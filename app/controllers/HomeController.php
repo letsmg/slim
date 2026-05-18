@@ -51,7 +51,15 @@ class HomeController
         );
 
         $response->getBody()->write($html);
-        return $response->withHeader('Content-Type', 'text/html; charset=utf-8');
+
+        // Em modo dev, desabilita cache para garantir que o navegador sempre pegue a versão mais recente
+        $response = $response
+            ->withHeader('Content-Type', 'text/html; charset=utf-8')
+            ->withHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->withHeader('Pragma', 'no-cache')
+            ->withHeader('Expires', '0');
+
+        return $response;
     }
 
     /**

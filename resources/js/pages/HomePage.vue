@@ -35,7 +35,7 @@
               Sistema de Gestão de Frotas
             </div>
             <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white leading-tight">
-              Gerencie sua
+              Gerencie sua sdf
               <span class="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">Frota</span>
               <br />com Inteligência
             </h1>
