@@ -10,20 +10,69 @@ class HomeController
     /**
      * Página inicial - serve o SPA (Vue.js)
      * Renderiza o index.html com os assets compilados pelo Vite
-     * Os arquivos app.css e app.js são referenciados diretamente no HTML
+     * 
+     * Em modo dev (Vite rodando), injeta os scripts do Vite Dev Server
+     * Em produção, usa os arquivos compilados em /js/app.js e /css/app.css
      */
     public function index(Request $request, Response $response): Response
     {
-        $htmlPath = __DIR__ . '/../../public/index.html';
+        $htmlPath = __DIR__ . '/../../resources/index.html';
 
         if (!file_exists($htmlPath)) {
-            $htmlPath = __DIR__ . '/../../resources/index.html';
+            $htmlPath = __DIR__ . '/../../public/index.html';
         }
 
         $html = file_get_contents($htmlPath);
 
+        // Verifica se o Vite Dev Server está rodando (modo desenvolvimento)
+        $viteRunning = $this->isViteRunning();
+
+        if ($viteRunning) {
+            // Modo dev: injeta os scripts do Vite Dev Server
+            // O Vite injeta automaticamente o client HMR e processa os módulos
+            $viteScript = '<script type="module" src="http://localhost:5175/@vite/client"></script>';
+            $viteScript .= "\n    <script type=\"module\" src=\"http://localhost:5175/js/app.js\"></script>";
+
+            // Remove os links de CSS/JS estáticos e adiciona os do Vite
+            $html = preg_replace(
+                '/<link rel="stylesheet" href="\/css\/app\.css" \/>/',
+                '',
+                $html
+            );
+            $html = preg_replace(
+                '/<script type="module" src="\/js\/app\.js"><\/script>/',
+                $viteScript,
+                $html
+            );
+        }
+
         $response->getBody()->write($html);
         return $response->withHeader('Content-Type', 'text/html; charset=utf-8');
+    }
+
+    /**
+     * Verifica se o Vite Dev Server está rodando
+     * Tenta conectar em IPv4 (127.0.0.1) e IPv6 (::1)
+     */
+    private function isViteRunning(): bool
+    {
+        static $running = null;
+        if ($running !== null) {
+            return $running;
+        }
+
+        $hosts = ['127.0.0.1', '::1', 'localhost'];
+        foreach ($hosts as $host) {
+            $fp = @fsockopen($host, 5175, $errno, $errstr, 0.3);
+            if ($fp) {
+                fclose($fp);
+                $running = true;
+                return true;
+            }
+        }
+
+        $running = false;
+        return false;
     }
 
     /**

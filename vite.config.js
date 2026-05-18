@@ -64,6 +64,8 @@ function hmrPollingPlugin() {
 export default defineConfig({
     server: {
         port: 5175,
+        // Escuta em todas as interfaces (IPv4 e IPv6)
+        host: '0.0.0.0',
         fs: {
             allow: ['..'],
         },
