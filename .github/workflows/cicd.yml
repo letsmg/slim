@@ -11,11 +11,23 @@ jobs:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
 
+      - name: 🟢 Configurar Node.js (Para os assets/frontend)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: 📦 Instalar dependências do Node e Rodar Builds
+        run: |
+          npm ci
+          # Executa o comando de deploy/build que você possui no seu package.json
+          npm run deploy
+
       - name: 🤐 Criar Pacote de Deploy Estruturado
         run: |
           mkdir build-tmp
 
-          # 1. Copia todas as pastas estruturais e os assets já compilados localmente
+          # 1. Copia todas as pastas estruturais necessárias para a execução
           cp -r app config db public resources build-tmp/
 
           # 2. Copia arquivos vitais de configuração da raiz
@@ -75,9 +87,10 @@ jobs:
                     --prefer-dist
             fi
 
-            # 5. Executa os scripts NPM solicitados diretamente no ambiente do servidor (se necessário)
+            # 5. Executa os scripts NPM solicitados diretamente no ambiente do servidor
             echo "⚙️ Executando comandos Node no Servidor..."
             if command -v npm &> /dev/null; then
+                # Roda o link de armazenamento (ex: criar pasta de uploads/links simbólicos)
                 npm run storage:link --if-present || echo "⚠️ Script storage:link falhou ou não existe"
             else
                 echo "⚠️ Node/NPM não está instalado globalmente no servidor. Pulando comandos npm."
