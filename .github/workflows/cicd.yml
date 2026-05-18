@@ -11,15 +11,27 @@ jobs:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
 
-      - name: 🤐 Criar Pacote de Deploy Completo
+      - name: 🟢 Configurar Node.js (Para os assets/frontend)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: 📦 Instalar dependências do Node e Rodar Builds
+        run: |
+          npm ci
+          # Executa o comando de deploy/build que você possui no seu package.json
+          npm run deploy
+
+      - name: 🤐 Criar Pacote de Deploy Estruturado
         run: |
           mkdir build-tmp
 
           # 1. Copia todas as pastas estruturais necessárias para a execução
           cp -r app config db public resources build-tmp/
 
-          # 2. Copia os arquivos de configuração e dependências da raiz
-          cp composer.json composer.lock phinx.php build-tmp/ 2>/dev/null || true
+          # 2. Copia arquivos vitais de configuração da raiz
+          cp composer.json composer.lock phinx.php package.json build-tmp/ 2>/dev/null || true
 
           # 3. Compacta tudo mantendo a estrutura correta
           cd build-tmp
@@ -32,44 +44,70 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           known_hosts: ${{ secrets.SSH_KNOWN_HOSTS }}
 
-      - name: 🚀 Executar Deploy no Servidor
+      - name: 🚀 Executar Deploy e Comandos no Servidor
         run: |
           SERVER_IP="${{ secrets.SERVER_IP }}"
 
           scp -o StrictHostKeyChecking=no deploy-slim.zip ubuntu@$SERVER_IP:/tmp/
 
-          # REMOVIDAS as aspas de 'EOF' para permitir que o GitHub Actions passe as variáveis corretamente se necessário,
-          # e adicionado tratamento rigoroso de comandos.
           ssh -o StrictHostKeyChecking=no ubuntu@$SERVER_IP << 'EOF'
             set -e
 
             BASE_DIR="/var/www/slim"
 
-            # 1. Garante que o unzip está instalado no servidor (evita falha silenciosa)
+            # 1. Garante que o unzip está instalado
             if ! command -v unzip &> /dev/null; then
                 echo "📦 Instalando unzip..."
                 sudo apt-get update -y && sudo apt-get install unzip -y
             fi
 
-            # 2. Garante que a pasta base existe
+            # 2. Garante que a pasta base existe e limpa o conteúdo antigo
             sudo mkdir -p "$BASE_DIR"
-
-            # 3. Limpa o conteúdo antigo com segurança
             echo "🧹 Limpando diretório antigo..."
             sudo rm -rf "${BASE_DIR:?}"/*
 
-            # 4. Descompacta o novo pacote
+            # 3. Descompacta o novo pacote estruturado
             echo "📂 Descompactando novo pacote..."
             sudo unzip -o /tmp/deploy-slim.zip -d "$BASE_DIR"
 
-            # 5. Ajustar permissões para o Nginx (Garante dono e grupo corretos)
-            echo "🔒 Ajustando permissões..."
+            # 4. Instalação robusta das dependências do Composer em Produção
+            echo "📦 Instalando dependências do Composer..."
+            cd "$BASE_DIR"
+            if [ -f "composer.json" ]; then
+                if ! command -v composer &> /dev/null; then
+                    echo "📥 Composer não encontrado globalmente. Baixando phar..."
+                    curl -sS https://getcomposer.org/installer | php
+                    sudo mv composer.phar /usr/local/bin/composer
+                fi
+
+                sudo COMPOSER_ALLOW_SUPERUSER=1 COMPOSER_HOME=/tmp/.composer composer install \
+                    --no-dev \
+                    --optimize-autoloader \
+                    --no-interaction \
+                    --prefer-dist
+            fi
+
+            # 5. Executa os scripts NPM solicitados diretamente no ambiente do servidor
+            echo "⚙️ Executando comandos Node no Servidor..."
+            if command -v npm &> /dev/null; then
+                # Roda o link de armazenamento (ex: criar pasta de uploads/links simbólicos)
+                npm run storage:link --if-present || echo "⚠️ Script storage:link falhou ou não existe"
+            else
+                echo "⚠️ Node/NPM não está instalado globalmente no servidor. Pulando comandos npm."
+            fi
+
+            # 6. Ajustar permissões finais para o Nginx (Garante dono e grupo corretos)
+            echo "🔒 Ajustando permissões para www-data..."
             sudo chown -R www-data:www-data "$BASE_DIR"
             sudo find "$BASE_DIR" -type d -exec chmod 755 {} \;
             sudo find "$BASE_DIR" -type f -exec chmod 644 {} \;
 
-            # 6. Limpeza do arquivo temporário no servidor
+            # 7. Limpeza do arquivo temporário
             rm -f /tmp/deploy-slim.zip
             
-            echo "✅ Deploy Slim Finalizado com sucesso em $BASE_DIR!"
+            echo "✅ Deploy Slim Finalizado com sucesso com TODAS as pastas e links criados!"
           EOF
+
+      - name: 🧹 Cleanup Runner
+        if: always()
+        run: rm -rf build-tmp deploy-slim.zip
