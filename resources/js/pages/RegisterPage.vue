@@ -1,6 +1,16 @@
 <template>
   <div class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center px-4 py-8">
     <div class="w-full max-w-md">
+      <!-- Link Voltar -->
+      <div class="mb-4">
+        <router-link to="/" class="inline-flex items-center text-sm text-slate-400 hover:text-emerald-400 transition-colors">
+          <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          Voltar para página inicial
+        </router-link>
+      </div>
+
       <!-- Logo -->
       <div class="text-center mb-8">
         <router-link to="/" class="inline-flex items-center space-x-3">
