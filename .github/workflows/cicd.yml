@@ -110,11 +110,12 @@ jobs:
             php db/seeders/run_seeds.php
 
             echo "🔗 Atualizando links simbólicos..."
-            if command -v npm &> /dev/null; then
-                npm run storage:link --if-present
-            else
-                php -r "if(!is_link('public/imgs')) { symlink('../storage/imgs', 'public/imgs'); }"
-            fi
+            # Remove o link antigo ou pasta antiga se existirem (evita duplicação)
+            sudo rm -f "$BASE_DIR/public/imgs"
+            
+            # Cria o link simbólico direto pelo terminal do Linux (muito mais seguro que via PHP)
+            sudo ln -s ../storage/imgs "$BASE_DIR/public/imgs"
+            echo "Link criado: public/imgs -> storage/imgs"
 
             # 6. Ajustar permissões finais para o Nginx
             echo "🔒 Ajustando permissões para www-data..."
