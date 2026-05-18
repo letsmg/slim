@@ -2,17 +2,23 @@
 
 namespace App\Requests;
 
+use App\Models\Vehicle;
+
 /**
  * Validação para criação/atualização de veículo
  * Segue ISO 27001: sanitização e validação rigorosa de entradas
+ * Valida unicidade de placa, chassi e renavam
  */
 class StoreVehicleRequest
 {
     private array $rules = [
         'marca'             => 'required|string|max:100|sanitize',
         'modelo'            => 'required|string|max:100|sanitize',
+        'placa'             => 'string|max:10|sanitize',
         'eixos'             => 'integer|min:2|max:20',
         'crlv'              => 'required|string|max:50|sanitize',
+        'chassi'            => 'string|max:50|sanitize',
+        'renavam'           => 'string|max:50|sanitize',
         'tipo_combustivel'  => 'required|string|max:50|sanitize',
         'dt_ultima_revisao' => 'date',
         'dt_proxima_revisao'=> 'date',
@@ -24,17 +30,27 @@ class StoreVehicleRequest
         'marca.max'                 => 'A marca deve ter no máximo 100 caracteres.',
         'modelo.required'           => 'O modelo é obrigatório.',
         'modelo.max'                => 'O modelo deve ter no máximo 100 caracteres.',
+        'placa.max'                 => 'A placa deve ter no máximo 10 caracteres.',
         'eixos.integer'             => 'O número de eixos deve ser um valor inteiro.',
         'eixos.min'                 => 'O número mínimo de eixos é 2.',
         'eixos.max'                 => 'O número máximo de eixos é 20.',
         'crlv.required'             => 'O CRLV é obrigatório.',
         'crlv.max'                  => 'O CRLV deve ter no máximo 50 caracteres.',
+        'chassi.max'                => 'O chassi deve ter no máximo 50 caracteres.',
+        'renavam.max'               => 'O Renavam deve ter no máximo 50 caracteres.',
         'tipo_combustivel.required' => 'O tipo de combustível é obrigatório.',
         'tipo_combustivel.max'      => 'O tipo de combustível deve ter no máximo 50 caracteres.',
         'dt_ultima_revisao.date'    => 'Informe uma data válida para última revisão.',
         'dt_proxima_revisao.date'   => 'Informe uma data válida para próxima revisão.',
         'dt_compra.date'            => 'Informe uma data válida para compra.',
     ];
+
+    private ?int $ignoreId = null;
+
+    public function __construct(?int $ignoreId = null)
+    {
+        $this->ignoreId = $ignoreId;
+    }
 
     public function validated(array $data): array
     {
@@ -95,6 +111,25 @@ class StoreVehicleRequest
 
             if (!isset($errors[$field])) {
                 $sanitized[$field] = $value;
+            }
+        }
+
+        // Valida unicidade de placa, chassi e renavam
+        $uniqueFields = ['placa', 'chassi', 'renavam'];
+        foreach ($uniqueFields as $field) {
+            if (!empty($data[$field])) {
+                $query = Vehicle::where($field, $data[$field]);
+                if ($this->ignoreId) {
+                    $query->where('id', '!=', $this->ignoreId);
+                }
+                if ($query->exists()) {
+                    $labels = [
+                        'placa' => 'placa',
+                        'chassi' => 'chassi',
+                        'renavam' => 'renavam',
+                    ];
+                    $errors[$field] = "Este {$labels[$field]} já está cadastrado em outro veículo.";
+                }
             }
         }
 

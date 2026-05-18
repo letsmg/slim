@@ -8,16 +8,22 @@ use App\Controllers\HomeController;
 use App\Controllers\MechanicController;
 use App\Controllers\TripController;
 use App\Controllers\ScheduledMaintenanceController;
+use App\Controllers\ReportController;
+use App\Controllers\UserController;
+use App\Services\ReportService;
 use App\Services\VehicleService;
 use App\Services\DriverService;
 use App\Services\MechanicService;
 use App\Services\TripService;
 use App\Services\ScheduledMaintenanceService;
+use App\Services\UserService;
 use App\Repositories\VehicleRepository;
 use App\Repositories\DriverRepository;
 use App\Repositories\MechanicRepository;
 use App\Repositories\TripRepository;
 use App\Repositories\ScheduledMaintenanceRepository;
+use App\Repositories\ReportRepository;
+use App\Repositories\UserRepository;
 
 require __DIR__ . '/../vendor/autoload.php';
 
@@ -58,6 +64,11 @@ $capsule->addConnection([
 $capsule->setAsGlobal();
 $capsule->bootEloquent();
 
+// DI manual - Usuarios
+$userRepository = new UserRepository();
+$userService = new UserService($userRepository);
+$userController = new UserController($userService);
+
 // DI manual - Veiculos
 $vehicleRepository = new VehicleRepository();
 $vehicleService = new VehicleService($vehicleRepository);
@@ -83,6 +94,11 @@ $scheduledMaintenanceRepository = new ScheduledMaintenanceRepository();
 $scheduledMaintenanceService = new ScheduledMaintenanceService($scheduledMaintenanceRepository);
 $maintenanceController = new ScheduledMaintenanceController($scheduledMaintenanceService);
 
+// DI manual - Relatorios
+$reportRepository = new ReportRepository();
+$reportService = new ReportService($reportRepository);
+$reportController = new ReportController($reportService);
+
 $homeController = new HomeController();
 
 $app = AppFactory::create();
@@ -95,7 +111,7 @@ $errorMiddleware = $app->addErrorMiddleware(
 );
 
 $routes = require __DIR__ . '/../config/routes.php';
-$routes($app, $vehicleController, $driverController, $homeController, $mechanicController, $tripController, $maintenanceController);
+$routes($app, $vehicleController, $driverController, $homeController, $mechanicController, $tripController, $maintenanceController, $reportController, $userController);
 
 // Fallback SPA: qualquer rota que não seja /api/* serve o index.html
 // Permite que o Vue Router gerencie as rotas do frontend

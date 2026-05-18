@@ -21,12 +21,11 @@ class UserController
      */
     public function index(Request $request, Response $response): Response
     {
-        $filters = sanitize_inputs($request->getQueryParams());
-        $users = $this->service->list($filters);
+        $users = $this->service->findAll();
 
         $payload = json_encode([
             'success' => true,
-            'users'   => $users->toArray(),
+            'users'   => $users,
         ], JSON_UNESCAPED_UNICODE);
 
         $response->getBody()->write($payload);
@@ -39,7 +38,7 @@ class UserController
     public function show(Request $request, Response $response, array $args): Response
     {
         $id = (int) ($args['id'] ?? 0);
-        $user = $this->service->find($id);
+        $user = $this->service->findById($id);
 
         if (!$user) {
             $payload = json_encode([
@@ -103,7 +102,7 @@ class UserController
     public function update(Request $request, Response $response, array $args): Response
     {
         $id = (int) ($args['id'] ?? 0);
-        $user = $this->service->find($id);
+        $user = $this->service->findById($id);
 
         if (!$user) {
             $payload = json_encode([
@@ -120,7 +119,7 @@ class UserController
         $data = $request->getParsedBody() ?? [];
 
         try {
-            $user = $this->service->update($user, $data);
+            $user = $this->service->update($id, $data);
 
             $payload = json_encode([
                 'success' => true,
@@ -151,7 +150,7 @@ class UserController
     public function destroy(Request $request, Response $response, array $args): Response
     {
         $id = (int) ($args['id'] ?? 0);
-        $user = $this->service->find($id);
+        $user = $this->service->findById($id);
 
         if (!$user) {
             $payload = json_encode([
@@ -165,7 +164,7 @@ class UserController
                 ->withStatus(404);
         }
 
-        $this->service->delete($user);
+        $this->service->delete($id);
 
         $payload = json_encode([
             'success' => true,

@@ -23,7 +23,10 @@
         <div class="p-5">
           <h3 class="text-lg font-semibold text-gray-900 mb-1">{{ vehicle.marca }} {{ vehicle.modelo }}</h3>
           <div class="space-y-2 text-sm text-gray-600">
+            <p v-if="vehicle.placa"><span class="font-medium">Placa:</span> {{ vehicle.placa }}</p>
             <p><span class="font-medium">CRLV:</span> {{ vehicle.crlv }}</p>
+            <p v-if="vehicle.chassi"><span class="font-medium">Chassi:</span> {{ vehicle.chassi }}</p>
+            <p v-if="vehicle.renavam"><span class="font-medium">Renavam:</span> {{ vehicle.renavam }}</p>
             <p><span class="font-medium">Eixos:</span> {{ vehicle.eixos }}</p>
             <p><span class="font-medium">Combustível:</span> {{ vehicle.tipo_combustivel }}</p>
             <p v-if="vehicle.dt_ultima_revisao"><span class="font-medium">Últ. Revisão:</span> {{ vehicle.dt_ultima_revisao }}</p>
@@ -60,15 +63,29 @@
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Placa</label>
+            <input v-model="form.placa" type="text" placeholder="ABC-1234" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
+          </div>
+          <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">CRLV</label>
             <input v-model="form.crlv" type="text" placeholder="CRLV-2026-001" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
           </div>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Chassi</label>
+            <input v-model="form.chassi" type="text" placeholder="9BWZZZ377VT004251" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Renavam</label>
+            <input v-model="form.renavam" type="text" placeholder="1234567890" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Eixos</label>
             <input v-model="form.eixos" type="number" min="2" max="9" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
           </div>
-        </div>
-        <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Combustível</label>
             <select v-model="form.tipo_combustivel" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
@@ -79,10 +96,13 @@
               <option value="Elétrico">Elétrico</option>
             </select>
           </div>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Data de Compra</label>
             <input v-model="form.dt_compra" type="date" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
           </div>
+          <div></div>
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div>
@@ -117,7 +137,8 @@ const editing = ref(null)
 const saving = ref(false)
 
 const form = reactive({
-  marca: '', modelo: '', eixos: 2, crlv: '', tipo_combustivel: 'Diesel',
+  marca: '', modelo: '', placa: '', eixos: 2, crlv: '', chassi: '', renavam: '',
+  tipo_combustivel: 'Diesel',
   dt_ultima_revisao: '', dt_proxima_revisao: '', dt_compra: '',
 })
 
@@ -132,15 +153,21 @@ onMounted(async () => {
 
 function openCreateModal() {
   editing.value = null
-  Object.assign(form, { marca: '', modelo: '', eixos: 2, crlv: '', tipo_combustivel: 'Diesel', dt_ultima_revisao: '', dt_proxima_revisao: '', dt_compra: '' })
+  Object.assign(form, {
+    marca: '', modelo: '', placa: '', eixos: 2, crlv: '', chassi: '', renavam: '',
+    tipo_combustivel: 'Diesel',
+    dt_ultima_revisao: '', dt_proxima_revisao: '', dt_compra: '',
+  })
   modalOpen.value = true
 }
 
 function editVehicle(v) {
   editing.value = v
   Object.assign(form, {
-    marca: v.marca, modelo: v.modelo, eixos: v.eixos, crlv: v.crlv,
-    tipo_combustivel: v.tipo_combustivel, dt_ultima_revisao: v.dt_ultima_revisao || '',
+    marca: v.marca, modelo: v.modelo, placa: v.placa || '', eixos: v.eixos,
+    crlv: v.crlv, chassi: v.chassi || '', renavam: v.renavam || '',
+    tipo_combustivel: v.tipo_combustivel,
+    dt_ultima_revisao: v.dt_ultima_revisao || '',
     dt_proxima_revisao: v.dt_proxima_revisao || '', dt_compra: v.dt_compra || '',
   })
   modalOpen.value = true

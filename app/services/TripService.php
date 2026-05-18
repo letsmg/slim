@@ -4,9 +4,11 @@ namespace App\Services;
 
 use App\Models\Trip;
 use App\Repositories\TripRepository;
+use App\Requests\StoreTripRequest;
 
 /**
  * Service de Trip - Regras de negócio para viagens
+ * Inclui validação de jornada de trabalho do motorista
  */
 class TripService
 {
@@ -24,28 +26,31 @@ class TripService
         return $this->tripRepository->findById($id);
     }
 
+    /**
+     * Cria uma nova viagem com validação de jornada de trabalho
+     */
     public function create(array $data): Trip
     {
         $data = sanitize_inputs($data);
 
-        $required = ['driver_id', 'vehicle_id', 'departure_forecast', 'arrival_forecast'];
-        $errors = [];
-        foreach ($required as $field) {
-            if (empty($data[$field])) {
-                $errors[$field] = "O campo {$field} é obrigatório.";
-            }
-        }
-
-        if (!empty($errors)) {
-            throw new \InvalidArgumentException(json_encode(['errors' => $errors]));
-        }
+        // Valida com StoreTripRequest (inclui regras de jornada)
+        $request = new StoreTripRequest();
+        $data = $request->validated($data);
 
         return $this->tripRepository->create($data);
     }
 
+    /**
+     * Atualiza uma viagem com validação de jornada de trabalho
+     */
     public function update(Trip $trip, array $data): Trip
     {
         $data = sanitize_inputs($data);
+
+        // Valida com StoreTripRequest ignorando o próprio ID
+        $request = new StoreTripRequest($trip->id);
+        $data = $request->validated($data);
+
         return $this->tripRepository->update($trip->id, $data);
     }
 

@@ -2,9 +2,12 @@
 
 namespace App\Requests;
 
+use App\Models\Driver;
+
 /**
  * Validação para criação/atualização de motorista
  * Segue ISO 27001: sanitização e validação rigorosa de entradas
+ * Valida unicidade de CPF
  */
 class StoreDriverRequest
 {
@@ -41,6 +44,13 @@ class StoreDriverRequest
         'toxicologico.boolean'   => 'O campo toxicológico deve ser verdadeiro ou falso.',
         'pendencias.boolean'     => 'O campo pendências deve ser verdadeiro ou falso.',
     ];
+
+    private ?int $ignoreId = null;
+
+    public function __construct(?int $ignoreId = null)
+    {
+        $this->ignoreId = $ignoreId;
+    }
 
     public function validated(array $data): array
     {
@@ -85,6 +95,17 @@ class StoreDriverRequest
 
             if (!isset($errors[$field])) {
                 $sanitized[$field] = $value;
+            }
+        }
+
+        // Valida unicidade de CPF
+        if (!empty($data['cpf'])) {
+            $query = Driver::where('cpf', $data['cpf']);
+            if ($this->ignoreId) {
+                $query->where('id', '!=', $this->ignoreId);
+            }
+            if ($query->exists()) {
+                $errors['cpf'] = 'Este CPF já está cadastrado para outro motorista.';
             }
         }
 

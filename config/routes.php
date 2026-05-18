@@ -9,8 +9,17 @@
  * @param App\Controllers\MechanicController $mechanicController
  * @param App\Controllers\TripController $tripController
  * @param App\Controllers\ScheduledMaintenanceController $maintenanceController
+ * @param App\Controllers\ReportController $reportController
+ * @param App\Controllers\UserController $userController
  */
-return function ($app, $vehicleController, $driverController, $homeController, $mechanicController, $tripController, $maintenanceController) {
+return function ($app, $vehicleController, $driverController, $homeController, $mechanicController, $tripController, $maintenanceController, $reportController, $userController) {
+    // Rotas da API - Usuarios
+    $app->get('/api/users', [$userController, 'index']);
+    $app->get('/api/users/{id}', [$userController, 'show']);
+    $app->post('/api/users', [$userController, 'store']);
+    $app->put('/api/users/{id}', [$userController, 'update']);
+    $app->delete('/api/users/{id}', [$userController, 'destroy']);
+
     // Rotas da API - Veiculos
     $app->get('/api/vehicles', [$vehicleController, 'index']);
     $app->get('/api/vehicles/{id}', [$vehicleController, 'show']);
@@ -45,4 +54,9 @@ return function ($app, $vehicleController, $driverController, $homeController, $
     $app->post('/api/scheduled-maintenances', [$maintenanceController, 'store']);
     $app->put('/api/scheduled-maintenances/{id}', [$maintenanceController, 'update']);
     $app->delete('/api/scheduled-maintenances/{id}', [$maintenanceController, 'destroy']);
+
+    // Rotas da API - Relatorios
+    $app->get('/api/reports', [$reportController, 'index']);
+    $app->get('/api/reports/{type}/pdf', [$reportController, 'pdf']);
+    $app->get('/api/reports/{type}', [$reportController, 'show']);
 };

@@ -34,10 +34,18 @@ jobs:
       - name: 🤐 Criar Pacote de Deploy Estruturado
         run: |
           mkdir build-tmp
-          # Copia as pastas estruturais necessárias
-          cp -r app config db public resources storage build-tmp/
+          # Copia as pastas estruturais necessárias (resources NÃO vai para produção)
+          cp -r app config db public storage build-tmp/
           # Copia arquivos vitais de configuração da raiz
           cp composer.json composer.lock phinx.php package.json build-tmp/ 2>/dev/null || true
+          
+          # Copia o .env.production como .env para produção
+          cp .env.production build-tmp/.env 2>/dev/null || true
+          
+          # Remove arquivos de desenvolvimento que não devem ir para produção
+          rm -f build-tmp/public/hot
+          # Remove o index.html do Vite (usamos index.php com vite_assets())
+          rm -f build-tmp/public/index.html
           
           cd build-tmp
           zip -r ../deploy-slim.zip .

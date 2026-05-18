@@ -61,4 +61,39 @@ class ReportController
         $response->getBody()->write($payload);
         return $response->withHeader('Content-Type', 'application/json');
     }
+
+    /**
+     * GET /api/reports/{type}/pdf - Download do relatório em PDF
+     */
+    public function pdf(Request $request, Response $response, array $args): Response
+    {
+        $type = sanitize_input($args['type'] ?? '');
+
+        $pdfContent = $this->service->generatePdf($type);
+
+        if ($pdfContent === null) {
+            $payload = json_encode([
+                'success' => false,
+                'message' => 'Tipo de relatório inválido',
+            ], JSON_UNESCAPED_UNICODE);
+
+            $response->getBody()->write($payload);
+            return $response
+                ->withHeader('Content-Type', 'application/json')
+                ->withStatus(404);
+        }
+
+        $filename = match ($type) {
+            'general'  => 'relatorio-geral',
+            'users'    => 'relatorio-usuarios',
+            'products' => 'relatorio-produtos',
+            default    => 'relatorio',
+        };
+
+        $response->getBody()->write($pdfContent);
+        return $response
+            ->withHeader('Content-Type', 'application/pdf')
+            ->withHeader('Content-Disposition', 'attachment; filename="' . $filename . '-' . date('Y-m-d') . '.pdf"')
+            ->withHeader('Content-Length', (string) strlen($pdfContent));
+    }
 }
