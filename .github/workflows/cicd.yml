@@ -11,14 +11,17 @@ jobs:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
 
-      - name: 🤐 Criar Pacote de Deploy
+      - name: 🤐 Criar Pacote de Deploy Completo
         run: |
           mkdir build-tmp
-          # COPIA A PASTA INTEIRA (mantendo a subpasta public para o Nginx encontrar)
-          cp -r public build-tmp/
-          # Copia o .htaccess para dentro da public se ele existir na raiz
-          [ -f .htaccess ] && cp .htaccess build-tmp/public/ || echo "Sem .htaccess na raiz"
 
+          # 1. Copia todas as pastas estruturais necessárias para a execução
+          cp -r app config db public resources build-tmp/
+
+          # 2. Copia os arquivos de configuração e dependências da raiz
+          cp composer.json composer.lock phinx.php build-tmp/ 2>/dev/null || true
+
+          # 3. Compacta tudo mantendo a estrutura correta
           cd build-tmp
           zip -r ../deploy-slim.zip .
           cd ..
