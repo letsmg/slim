@@ -2,15 +2,18 @@
     <header class="bg-gray-900 shadow-lg border-b border-gray-700">
         <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
+                <!-- Logo -->
                 <div class="flex-shrink-0 flex items-center">
                     <router-link to="/dashboard" class="text-xl font-bold text-emerald-400 hover:text-emerald-300 transition-colors">
                         Slim App
                     </router-link>
                     <span class="ml-3 px-2 py-0.5 text-xs font-medium bg-emerald-900 text-emerald-300 rounded-full">Painel</span>
                 </div>
-                <div class="hidden sm:flex sm:space-x-8">
+
+                <!-- Menu Desktop -->
+                <div class="hidden sm:flex sm:items-center sm:space-x-1">
                     <router-link
-                        v-for="item in menuItems"
+                        v-for="item in mainMenuItems"
                         :key="item.path"
                         :to="item.path"
                         class="inline-flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors"
@@ -23,7 +26,45 @@
                         </svg>
                         {{ item.label }}
                     </router-link>
+
+                    <!-- Dropdown Adm -->
+                    <div class="relative" @mouseenter="admOpen = true" @mouseleave="admOpen = false">
+                        <button
+                            class="inline-flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors"
+                            :class="isAdmActive
+                                ? 'text-emerald-400 bg-gray-800'
+                                : 'text-gray-300 hover:text-emerald-400 hover:bg-gray-800'"
+                        >
+                            <svg class="w-5 h-5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                            </svg>
+                            Adm
+                            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+                        <div
+                            v-show="admOpen"
+                            class="absolute right-0 mt-1 w-48 bg-gray-800 rounded-lg shadow-xl border border-gray-700 py-1 z-50"
+                        >
+                            <router-link
+                                v-for="item in admMenuItems"
+                                :key="item.path"
+                                :to="item.path"
+                                @click="admOpen = false"
+                                class="block px-4 py-2 text-sm text-gray-300 hover:text-emerald-400 hover:bg-gray-700 transition-colors"
+                                :class="isActive(item.path) ? 'text-emerald-400 bg-gray-700' : ''"
+                            >
+                                <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path v-html="item.icon" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+                                </svg>
+                                {{ item.label }}
+                            </router-link>
+                        </div>
+                    </div>
                 </div>
+
+                <!-- Usuário + Sair (Desktop) -->
                 <div class="hidden sm:flex items-center space-x-4">
                     <div class="flex items-center space-x-3">
                         <div class="h-8 w-8 rounded-full bg-emerald-500 flex items-center justify-center">
@@ -44,6 +85,8 @@
                         </svg>
                     </button>
                 </div>
+
+                <!-- Botão Hamburguer (Mobile) -->
                 <div class="flex items-center sm:hidden">
                     <button
                         @click="mobileOpen = !mobileOpen"
@@ -58,6 +101,8 @@
                 </div>
             </div>
         </nav>
+
+        <!-- Menu Mobile -->
         <div v-show="mobileOpen" class="sm:hidden border-t border-gray-700">
             <div class="pt-2 pb-3 space-y-1">
                 <div class="px-4 py-3 border-b border-gray-700">
@@ -71,8 +116,10 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Itens principais -->
                 <router-link
-                    v-for="item in menuItems"
+                    v-for="item in mainMenuItems"
                     :key="item.path"
                     :to="item.path"
                     @click="mobileOpen = false"
@@ -86,6 +133,28 @@
                     </svg>
                     {{ item.label }}
                 </router-link>
+
+                <!-- Submenu Adm no mobile -->
+                <div class="border-t border-gray-700 pt-1 mt-1">
+                    <p class="px-4 py-1 text-xs font-semibold text-gray-500 uppercase tracking-wider">Administração</p>
+                    <router-link
+                        v-for="item in admMenuItems"
+                        :key="item.path"
+                        :to="item.path"
+                        @click="mobileOpen = false"
+                        class="block pl-8 pr-3 py-2 text-base font-medium transition-colors"
+                        :class="isActive(item.path)
+                            ? 'text-emerald-400 bg-gray-800 border-l-4 border-emerald-400'
+                            : 'text-gray-300 hover:text-emerald-400 hover:bg-gray-800 border-l-4 border-transparent'"
+                    >
+                        <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path v-html="item.icon" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+                        </svg>
+                        {{ item.label }}
+                    </router-link>
+                </div>
+
+                <!-- Sair no mobile -->
                 <button
                     @click="handleLogout"
                     class="w-full text-left pl-4 pr-3 py-2 text-base font-medium text-red-400 hover:bg-gray-800 border-l-4 border-transparent transition-colors"
@@ -107,6 +176,7 @@ import { useRoute, useRouter } from 'vue-router'
 const route = useRoute()
 const router = useRouter()
 const mobileOpen = ref(false)
+const admOpen = ref(false)
 
 const props = defineProps({
     user: {
@@ -130,16 +200,14 @@ const userInitials = computed(() => {
         : name.substring(0, 2).toUpperCase()
 })
 
-const menuItems = [
+/**
+ * Itens principais do menu (sempre visíveis)
+ */
+const mainMenuItems = [
     {
         label: 'Dashboard',
         path: '/dashboard',
         icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6',
-    },
-    {
-        label: 'Usuários',
-        path: '/usuarios',
-        icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z',
     },
     {
         label: 'Veículos',
@@ -166,10 +234,16 @@ const menuItems = [
         path: '/mecanicos',
         icon: 'M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01',
     },
+]
+
+/**
+ * Itens do submenu Adm
+ */
+const admMenuItems = [
     {
-        label: 'Produtos',
-        path: '/produtos',
-        icon: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4',
+        label: 'Usuários',
+        path: '/usuarios',
+        icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z',
     },
     {
         label: 'Relatórios',
@@ -178,12 +252,23 @@ const menuItems = [
     },
 ]
 
+/**
+ * Verifica se algum item do Adm está ativo (para highlight do dropdown)
+ */
+const isAdmActive = computed(() =>
+    admMenuItems.some(item => route.path === item.path || route.path.startsWith(item.path + '/'))
+)
+
 function isActive(path) {
     return route.path === path || route.path.startsWith(path + '/')
 }
 
 function handleLogout() {
+    // Limpa sessão antes de emitir o evento
+    sessionStorage.removeItem('auth_token')
+    sessionStorage.removeItem('user_name')
+    sessionStorage.removeItem('user_email')
+    sessionStorage.removeItem('user_level')
     emit('logout')
-    router.push('/login')
 }
 </script>
