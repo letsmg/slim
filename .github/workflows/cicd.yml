@@ -11,10 +11,10 @@ jobs:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
 
-      - name: 🐘 Configurar PHP (Necessário para as ferramentas locais no Runner)
+      - name: 🐘 Configurar PHP (Para ferramentas locais no Runner)
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.3' # 🚀 Atualizado aqui para 8.3
+          php-version: '8.3'
           extensions: mbstring, xml, ctype, iconv, mysql, pgsql
 
       - name: 📦 Instalar dependências do Composer no Runner
@@ -26,23 +26,20 @@ jobs:
           node-version: 20
           cache: 'npm'
 
-      - name: 📦 Instalar dependências do Node e Rodar Builds + Migrations locais
+      - name: 📦 Instalar dependências do Node e Rodar Builds do Frontend
         run: |
           npm ci
-          # Agora que o PHP e o Vendor existem no Runner, o deploy roda sem erros!
-          npm run deploy
+          npm run prod
+          node -e "const fs = require('fs'); fs.copyFileSync('resources/index.html', 'public/index.html');"
 
       - name: 🤐 Criar Pacote de Deploy Estruturado
         run: |
           mkdir build-tmp
-
-          # 1. Copia todas as pastas estruturais necessárias para a execução
+          # Copia as pastas estruturais necessárias
           cp -r app config db public resources build-tmp/
-
-          # 2. Copia arquivos vitais de configuração da raiz
+          # Copia arquivos vitais de configuração da raiz
           cp composer.json composer.lock phinx.php package.json build-tmp/ 2>/dev/null || true
-
-          # 3. Compacta tudo mantendo a estrutura correta
+          
           cd build-tmp
           zip -r ../deploy-slim.zip .
           cd ..
@@ -70,11 +67,10 @@ jobs:
                 sudo apt-get update -y && sudo apt-get install unzip -y
             fi
 
-            # 2. Garante que as pastas base existem (inclusive a storage real para não perder uploads)
+            # 2. Cria estrutura de pastas e protege uploads existentes
             sudo mkdir -p "$BASE_DIR"
             sudo mkdir -p "$BASE_DIR/storage/imgs"
             
-            # Movemos a pasta de uploads real temporariamente para o /tmp para não apagá-la no 'rm -rf'
             if [ -d "$BASE_DIR/storage/imgs" ]; then
                 sudo mv "$BASE_DIR/storage/imgs" /tmp/storage_imgs_backup
             fi
@@ -82,22 +78,20 @@ jobs:
             echo "🧹 Limpando diretório antigo..."
             sudo rm -rf "${BASE_DIR:?}"/*
 
-            # Restauramos a pasta de uploads segura
             sudo mkdir -p "$BASE_DIR/storage"
             if [ -d "/tmp/storage_imgs_backup" ]; then
                 sudo mv /tmp/storage_imgs_backup "$BASE_DIR/storage/imgs"
             fi
 
-            # 3. Descompacta o novo pacote estruturado
+            # 3. Descompacta o novo pacote
             echo "📂 Descompactando novo pacote..."
             sudo unzip -o /tmp/deploy-slim.zip -d "$BASE_DIR"
 
-            # 4. Instalação robusta das dependências do Composer em Produção
+            # 4. Instalação das dependências do Composer em Produção
             echo "📦 Instalando dependências do Composer..."
             cd "$BASE_DIR"
             if [ -f "composer.json" ]; then
                 if ! command -v composer &> /dev/null; then
-                    echo "📥 Composer não encontrado globalmente. Baixando phar..."
                     curl -sS https://getcomposer.org/installer | php
                     sudo mv composer.phar /usr/local/bin/composer
                 fi
@@ -109,26 +103,30 @@ jobs:
                     --prefer-dist
             fi
 
-            # 5. Executa o storage:link no servidor para criar os links simbólicos corretos na máquina web
-            echo "⚙️ Executando comandos Node no Servidor..."
+            # 5. Executa as Migrações de Banco de Dados e os Links de Storage no Servidor Real
+            echo "⚙️ Executando migrações de banco no servidor..."
+            php vendor/bin/phinx rollback -e development -t 0
+            php vendor/bin/phinx migrate -e development
+            php db/seeders/run_seeds.php
+
+            echo "🔗 Atualizando links simbólicos..."
             if command -v npm &> /dev/null; then
-                npm run storage:link --if-present || echo "⚠️ Script storage:link falhou ou não existe"
+                npm run storage:link --if-present
             else
-                echo "⚠️ Node/NPM não está instalado globalmente no servidor. Tentando rodar link direto via PHP..."
                 php -r "if(!is_link('public/imgs')) { symlink('../storage/imgs', 'public/imgs'); }"
             fi
 
-            # 6. Ajustar permissões finais para o Nginx (Garante dono e grupo corretos)
+            # 6. Ajustar permissões finais para o Nginx
             echo "🔒 Ajustando permissões para www-data..."
             sudo chown -R www-data:www-data "$BASE_DIR"
             sudo find "$BASE_DIR" -type d -exec chmod 755 {} \;
             sudo find "$BASE_DIR" -type f -exec chmod 644 {} \;
 
-            # 7. Limpeza do arquivo temporário
+            # 7. Limpeza
             rm -f /tmp/deploy-slim.zip
             sudo rm -rf /tmp/storage_imgs_backup
             
-            echo "✅ Deploy Slim Finalizado com sucesso com TODAS as pastas e links criados!"
+            echo "✅ Deploy Slim Finalizado com sucesso!"
           EOF
 
       - name: 🧹 Cleanup Runner
