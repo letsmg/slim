@@ -10,8 +10,7 @@
     "seed": "php db/seeders/run_seeds.php",
     "migrate:fresh": "php vendor/bin/phinx rollback -e development -t 0 && php vendor/bin/phinx migrate -e development && php db/seeders/run_seeds.php",
     "test": "php vendor/bin/phpunit",
-    "deploy:win": "npm run prod && copy /Y resources\\index.html public\\index.html && npm run migrate:fresh && npm run storage:link",
-    "deploy:linux": "npm run prod && cp resources/index.html public/index.html && npm run migrate:fresh && npm run storage:link"
+    "deploy": "npm run prod && node -e \"const fs = require('fs'); fs.copyFileSync('resources/index.html', 'public/index.html');\" && npm run migrate:fresh && npm run storage:link"
   },
   "dependencies": {
     "axios": "^1.16.1",
