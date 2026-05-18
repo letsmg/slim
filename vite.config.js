@@ -9,6 +9,11 @@ export default defineConfig({
         fs: {
             allow: ['..'],
         },
+        // HMR via WebSocket para recarregamento em tempo real
+        watch: {
+            usePolling: true, // Força polling no Windows para detectar alterações
+            interval: 100,
+        },
     },
     // Expõe variáveis do .env com prefixo VITE_ para o frontend
     define: {
@@ -21,7 +26,8 @@ export default defineConfig({
     ],
     root: 'resources',
     base: '/',
-    publicDir: '../public',
+    // publicDir removido para não conflitar com outDir - os assets estáticos
+    // (imagens, etc) são servidos pelo PHP via link simbólico public/imgs -> storage/imgs
 
     css: {
         devSourcemap: true,
