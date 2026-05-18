@@ -1,1 +1,1 @@
-var e=`/imgs`;function t(t){return`${e}/${t}`}export{t};
+const n="/imgs";function r(i){return`${n}/${i}`}export{r as i};
