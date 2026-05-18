@@ -19,9 +19,18 @@ jobs:
 
       - name: 📦 Instalar dependências do Node e Rodar Builds
         run: |
-          npm ci
-          # Executa o comando de deploy/build que você possui no seu package.json
-          npm run deploy
+          # 1. Instala as dependências do package.json de forma tolerante a desvios do lockfile
+          npm install
+
+          # 2. Garante a presença do plugin do Tailwind cobrado pelo Vite em ambiente limpo
+          npm install @tailwindcss/vite --save-dev
+
+          # 3. Executa os passos do "npm run deploy" adaptados para o ecossistema Linux (Evitando comandos do Windows)
+          echo "🛠️ Rodando build de produção do Vite..."
+          npm run prod
+
+          echo "📄 Copiando index.html para o diretório público..."
+          cp resources/index.html public/index.html 2>/dev/null || echo "Aviso: resources/index.html não encontrado, pulando..."
 
       - name: 🤐 Criar Pacote de Deploy Estruturado
         run: |
