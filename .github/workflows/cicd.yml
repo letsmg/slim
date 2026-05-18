@@ -30,7 +30,6 @@ jobs:
         run: |
           npm ci
           npm run prod
-          node -e "const fs = require('fs'); fs.copyFileSync('resources/index.html', 'public/index.html');"
 
       - name: 🤐 Criar Pacote de Deploy Estruturado
         run: |

@@ -4,6 +4,7 @@
   "scripts": {
     "dev": "vite",
     "serve": "php -S localhost:8000 router.php",
+    "serve:simple": "php -S localhost:8000 -t public",
     "build": "vite build",
     "prod": "vite build",
     "storage:link": "php -r \"$target='storage/imgs';$link='public/imgs';if(is_dir($link)||is_link($link)){echo 'Removendo link existente...'.PHP_EOL;if(PHP_OS_FAMILY==='Windows'){exec('rmdir '.escapeshellarg(str_replace('/', '\\\\', $link)));}else{exec('rm -rf '.escapeshellarg($link));}}echo 'Criando link simbolico...'.PHP_EOL;if(PHP_OS_FAMILY==='Windows'){$t=str_replace('/', '\\\\', $target);$l=str_replace('/', '\\\\', $link);exec(\\\"mklink /J \\\" . escapeshellarg($l) . \\\" \\\" . escapeshellarg($t));}else{symlink('../'.$target,$link);}echo 'Link criado: public/imgs -> storage/imgs'.PHP_EOL;\"",
