@@ -6,7 +6,7 @@
         <h1 class="text-2xl font-bold text-gray-900">Usuários</h1>
         <p class="mt-1 text-sm text-gray-500">Gerencie os usuários do sistema</p>
       </div>
-      <button @click="openCreateModal" class="mt-4 sm:mt-0 inline-flex items-center px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors">
+      <button v-if="isAdmin" @click="openCreateModal" class="mt-4 sm:mt-0 inline-flex items-center px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors">
         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
         </svg>
@@ -29,7 +29,7 @@
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
-            <tr v-for="user in users" :key="user.id" class="hover:bg-gray-50 transition-colors">
+            <tr v-for="user in filteredUsers" :key="user.id" class="hover:bg-gray-50 transition-colors">
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">#{{ user.id }}</td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="flex items-center">
@@ -54,10 +54,10 @@
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                 <button @click="editUser(user)" class="text-indigo-600 hover:text-indigo-900 mr-3">Editar</button>
-                <button @click="deleteUser(user)" class="text-red-600 hover:text-red-900">Excluir</button>
+                <button v-if="isAdmin" @click="deleteUser(user)" class="text-red-600 hover:text-red-900">Excluir</button>
               </td>
             </tr>
-            <tr v-if="users.length === 0">
+            <tr v-if="filteredUsers.length === 0">
               <td colspan="6" class="px-6 py-12 text-center text-gray-500 text-sm">Nenhum usuário encontrado.</td>
             </tr>
           </tbody>
@@ -105,7 +105,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import api from '@/services/api'
 import FormModal from '@components/FormModal.vue'
 
@@ -113,6 +113,27 @@ const users = ref([])
 const modalOpen = ref(false)
 const editing = ref(null)
 const saving = ref(false)
+
+/**
+ * Nível do usuário logado (vem do sessionStorage setado no login)
+ */
+const userLevel = computed(() => sessionStorage.getItem('user_level') || '')
+const isAdmin = computed(() => userLevel.value === 'admin')
+
+/**
+ * Filtra usuários conforme o nível de acesso:
+ * - Admin: vê todos
+ * - Operacional: vê apenas outros operacionais
+ * - Suporte: vê apenas a si mesmo
+ */
+const filteredUsers = computed(() => {
+  const level = userLevel.value
+  if (level === 'admin') return users.value
+  if (level === 'operational') return users.value.filter(u => u.level === 'operational')
+  // Suporte ou outros: vê apenas a si mesmo
+  const myEmail = sessionStorage.getItem('user_email')
+  return users.value.filter(u => u.email === myEmail)
+})
 
 const form = reactive({
   name: '',

@@ -21,19 +21,18 @@
           </svg>
         </div>
         <div class="p-5">
-          <h3 class="text-lg font-semibold text-gray-900 mb-1">{{ driver.name }}</h3>
+          <h3 class="text-lg font-semibold text-gray-900 mb-1">{{ driver.nome }}</h3>
           <div class="space-y-2 text-sm text-gray-600">
-            <p><span class="font-medium">CPF:</span> {{ driver.document }}</p>
-            <p><span class="font-medium">CNH:</span> {{ driver.cnh }}</p>
-            <p><span class="font-medium">Telefone:</span> {{ driver.phone }}</p>
-            <p><span class="font-medium">Email:</span> {{ driver.email }}</p>
-            <span class="inline-block px-2 py-1 text-xs font-medium rounded-full" :class="driver.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'">
-              {{ driver.active ? 'Ativo' : 'Inativo' }}
-            </span>
+            <p><span class="font-medium">CPF:</span> {{ driver.cpf }}</p>
+            <p><span class="font-medium">CNH:</span> {{ driver.cnh }} ({{ driver.categoria_cnh }})</p>
+            <p><span class="font-medium">RG:</span> {{ driver.rg }}</p>
+            <p><span class="font-medium">Endereço:</span> {{ driver.endereco }}, {{ driver.cidade }}/{{ driver.estado }}</p>
+            <p><span class="font-medium">Toxicológico:</span> {{ driver.toxicologico ? 'Em dia' : 'Pendente' }}</p>
+            <p><span class="font-medium">Pendências:</span> {{ driver.pendencias ? 'Sim' : 'Não' }}</p>
           </div>
           <div class="mt-4 flex space-x-2">
             <button @click="editDriver(driver)" class="flex-1 px-3 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 rounded-md hover:bg-indigo-100 transition-colors">Editar</button>
-            <button @click="deleteDriver(driver)" class="flex-1 px-3 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-md hover:bg-red-100 transition-colors">Excluir</button>
+            <button v-if="isAdmin" @click="deleteDriver(driver)" class="flex-1 px-3 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-md hover:bg-red-100 transition-colors">Excluir</button>
           </div>
         </div>
       </div>
@@ -51,31 +50,76 @@
       <form class="space-y-4">
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Nome</label>
-          <input v-model="form.name" type="text" required placeholder="Nome completo" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
+          <input v-model="form.nome" type="text" required placeholder="Nome completo" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">CPF</label>
-            <input v-model="form.document" type="text" placeholder="000.000.000-00" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
+            <input v-model="form.cpf" type="text" placeholder="000.000.000-00" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">CNH</label>
-            <input v-model="form.cnh" type="text" placeholder="Número da CNH" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
+            <label class="block text-sm font-medium text-gray-700 mb-1">RG</label>
+            <input v-model="form.rg" type="text" placeholder="00.000.000-0" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
           </div>
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Telefone</label>
-            <input v-model="form.phone" type="text" placeholder="(11) 99999-0000" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
+            <label class="block text-sm font-medium text-gray-700 mb-1">CNH</label>
+            <input v-model="form.cnh" type="text" placeholder="Número da CNH" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-            <input v-model="form.email" type="email" placeholder="email@exemplo.com" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
+            <label class="block text-sm font-medium text-gray-700 mb-1">Categoria CNH</label>
+            <select v-model="form.categoria_cnh" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+              <option value="A">A</option>
+              <option value="B">B</option>
+              <option value="C">C</option>
+              <option value="D">D</option>
+              <option value="E">E</option>
+            </select>
           </div>
         </div>
-        <div class="flex items-center">
-          <input v-model="form.active" type="checkbox" id="driver-active" class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
-          <label for="driver-active" class="ml-2 text-sm text-gray-700">Motorista ativo</label>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Endereço</label>
+          <input v-model="form.endereco" type="text" placeholder="Rua, número" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
+        </div>
+        <div class="grid grid-cols-3 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Bairro</label>
+            <input v-model="form.bairro" type="text" placeholder="Bairro" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Cidade</label>
+            <input v-model="form.cidade" type="text" placeholder="Cidade" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Estado</label>
+            <select v-model="form.estado" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+              <option value="">Selecione</option>
+              <option value="SP">SP</option>
+              <option value="RJ">RJ</option>
+              <option value="MG">MG</option>
+              <option value="RS">RS</option>
+              <option value="PR">PR</option>
+              <option value="BA">BA</option>
+              <option value="DF">DF</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">CEP</label>
+            <input v-model="form.cep" type="text" placeholder="00000-000" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
+          </div>
+        </div>
+        <div class="flex space-x-6">
+          <div class="flex items-center">
+            <input v-model="form.toxicologico" type="checkbox" id="driver-toxico" class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
+            <label for="driver-toxico" class="ml-2 text-sm text-gray-700">Toxicológico em dia</label>
+          </div>
+          <div class="flex items-center">
+            <input v-model="form.pendencias" type="checkbox" id="driver-pendencias" class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
+            <label for="driver-pendencias" class="ml-2 text-sm text-gray-700">Possui pendências</label>
+          </div>
         </div>
       </form>
 
@@ -90,7 +134,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import api from '@/services/api'
 import FormModal from '@components/FormModal.vue'
 
@@ -99,7 +143,17 @@ const modalOpen = ref(false)
 const editing = ref(null)
 const saving = ref(false)
 
-const form = reactive({ name: '', document: '', cnh: '', phone: '', email: '', active: true })
+/**
+ * Nível do usuário logado (vem do sessionStorage setado no login)
+ */
+const userLevel = computed(() => sessionStorage.getItem('user_level') || '')
+const isAdmin = computed(() => userLevel.value === 'admin')
+
+const form = reactive({
+  nome: '', cpf: '', rg: '', cnh: '', categoria_cnh: 'D',
+  endereco: '', bairro: '', cidade: '', estado: 'SP', cep: '',
+  toxicologico: false, pendencias: false,
+})
 
 onMounted(async () => {
   try {
@@ -110,13 +164,23 @@ onMounted(async () => {
 
 function openCreateModal() {
   editing.value = null
-  Object.assign(form, { name: '', document: '', cnh: '', phone: '', email: '', active: true })
+  Object.assign(form, {
+    nome: '', cpf: '', rg: '', cnh: '', categoria_cnh: 'D',
+    endereco: '', bairro: '', cidade: '', estado: 'SP', cep: '',
+    toxicologico: false, pendencias: false,
+  })
   modalOpen.value = true
 }
 
 function editDriver(d) {
   editing.value = d
-  Object.assign(form, { name: d.name, document: d.document, cnh: d.cnh, phone: d.phone, email: d.email, active: !!d.active })
+  Object.assign(form, {
+    nome: d.nome, cpf: d.cpf, rg: d.rg || '', cnh: d.cnh,
+    categoria_cnh: d.categoria_cnh || 'D',
+    endereco: d.endereco || '', bairro: d.bairro || '',
+    cidade: d.cidade || '', estado: d.estado || 'SP', cep: d.cep || '',
+    toxicologico: !!d.toxicologico, pendencias: !!d.pendencias,
+  })
   modalOpen.value = true
 }
 
@@ -139,7 +203,7 @@ async function saveDriver() {
 }
 
 async function deleteDriver(d) {
-  if (!confirm(`Excluir motorista ${d.name}?`)) return
+  if (!confirm(`Excluir motorista ${d.nome}?`)) return
   try {
     await api.delete(`/api/drivers/${d.id}`)
     drivers.value = drivers.value.filter(x => x.id !== d.id)
