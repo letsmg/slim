@@ -32,3 +32,6 @@ public/.vite/
 
 # Vite build cache
 node_modules/.vite/
+
+# Vite hot file (gerado automaticamente pelo npm run dev)
+public/hot
