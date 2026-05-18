@@ -5,6 +5,10 @@ import tailwindcss from '@tailwindcss/vite'
 export default defineConfig({
     server: {
         port: 5175,
+        // Permite que o Vite sirva arquivos de fora do root (necessário para links simbólicos)
+        fs: {
+            allow: ['..'],
+        },
     },
     // Expõe variáveis do .env com prefixo VITE_ para o frontend
     define: {

@@ -51,10 +51,10 @@ Sistema completo de gerenciamento de frotas com autenticação, CRUD de usuário
 │   ├── index.html          # HTML servido para SPA
 │   ├── css/                # Assets CSS compilados (minificados com hash)
 │   ├── js/                 # Assets JS compilados (minificados com hash)
-│   └── imgs/               # Atalho simbólico para resources/storage/app/public/imgs
+│   └── imgs/               # Atalho simbólico para storage/imgs
 ├── resources/
 │   ├── index.html          # Entry HTML do Vite (dev)
-│   ├── storage/app/public/imgs/  # Imagens do sistema (banner, logos)
+│   ├── storage/            # Pasta legada (não utilizada)
 │   ├── css/
 │   │   └── app.css         # Estilos Tailwind (entry point)
 │   └── js/
@@ -149,7 +149,7 @@ php -S localhost:8080 -t public/
 | `npm run dev` | Inicia servidor de desenvolvimento Vite com HMR |
 | `npm run build` | Compila JS/CSS para produção em `public/js/` e `public/css/` (minificado com hash) |
 | `npm run prod` | Compila JS/CSS para produção (alias para build) |
-| `npm run storage:link` | Cria atalho simbólico `public/imgs` → `resources/storage/app/public/imgs` |
+| `npm run storage:link` | Cria atalho simbólico `public/imgs` → `storage/imgs` |
 | `npm run migrate` | Executa as migrations pendentes |
 | `npm run seed` | Executa os seeders |
 | `npm run migrate:fresh` | Rollback total + migrate + seed |

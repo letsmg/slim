@@ -21,8 +21,8 @@ composer.lock
 
 # Logs
 *.log
-resources/storage/logs/*
-!resources/storage/.gitkeep
+storage/logs/*
+!storage/.gitkeep
 
 # Storage symlink
 public/imgs

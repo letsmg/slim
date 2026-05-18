@@ -2,6 +2,10 @@ import { createRouter, createWebHistory } from 'vue-router'
 
 // Lazy load das páginas para melhor performance
 const HomePage = () => import('@pages/HomePage.vue')
+const LoginPage = () => import('@pages/LoginPage.vue')
+const RegisterPage = () => import('@pages/RegisterPage.vue')
+const TermosDeUso = () => import('@pages/TermosDeUso.vue')
+const PoliticaPrivacidade = () => import('@pages/PoliticaPrivacidade.vue')
 const DashboardPage = () => import('@pages/DashboardPage.vue')
 const UserIndex = () => import('@user/UserIndex.vue')
 const ProductIndex = () => import('@product/ProductIndex.vue')
@@ -33,14 +37,26 @@ const routes = [
     {
         path: '/login',
         name: 'login',
-        component: HomePage, // Placeholder - implementar LoginPage futuramente
+        component: LoginPage,
         meta: { title: 'Login', auth: false },
     },
     {
         path: '/register',
         name: 'register',
-        component: HomePage, // Placeholder - implementar RegisterPage futuramente
+        component: RegisterPage,
         meta: { title: 'Cadastro', auth: false },
+    },
+    {
+        path: '/termos-de-uso',
+        name: 'termos-de-uso',
+        component: TermosDeUso,
+        meta: { title: 'Termos de Uso', auth: false },
+    },
+    {
+        path: '/politica-de-privacidade',
+        name: 'politica-de-privacidade',
+        component: PoliticaPrivacidade,
+        meta: { title: 'Política de Privacidade', auth: false },
     },
 
     // === Rotas Autenticadas (layout AuthHeader/AuthFooter) ===

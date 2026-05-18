@@ -1,5 +1,8 @@
 <template>
   <div class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <!-- Modal de aceitação de termos -->
+    <TermsModal :visible="showTermsModal" @accept="showTermsModal = false" />
+
     <!-- Header com logo -->
     <header class="border-b border-slate-700/50 backdrop-blur-sm bg-slate-900/80 sticky top-0 z-50">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
@@ -90,10 +93,8 @@
           >
             <div class="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-teal-500/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             <div class="relative">
-              <div class="w-12 h-12 rounded-lg bg-gradient-to-br from-emerald-900/50 to-teal-900/50 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-                <svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path v-html="feature.icon" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
-                </svg>
+              <div class="w-full h-40 rounded-lg overflow-hidden mb-4 group-hover:scale-105 transition-transform duration-300">
+                <img :src="imgUrl(feature.image)" :alt="feature.title" class="w-full h-full object-cover" />
               </div>
               <h3 class="text-lg font-semibold text-white mb-2">{{ feature.title }}</h3>
               <p class="text-sm text-slate-400">{{ feature.description }}</p>
@@ -126,11 +127,12 @@
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex flex-col md:flex-row items-center justify-between gap-6">
           <div class="flex items-center space-x-3">
-            <img :src="imgUrl('logo2.png')" alt="Slim App" class="h-8 w-auto opacity-60" />
+            <img :src="imgUrl('logo2.svg')" alt="Slim App" class="h-8 w-auto opacity-60" />
             <span class="text-sm text-slate-500">Slim App</span>
           </div>
           <div class="flex items-center space-x-6">
             <router-link to="/termos-de-uso" class="text-sm text-slate-500 hover:text-emerald-400 transition-colors">Termos de Uso</router-link>
+            <router-link to="/politica-de-privacidade" class="text-sm text-slate-500 hover:text-emerald-400 transition-colors">Privacidade</router-link>
             <router-link to="/login" class="text-sm text-slate-500 hover:text-emerald-400 transition-colors">Entrar</router-link>
             <router-link to="/register" class="text-sm text-slate-500 hover:text-emerald-400 transition-colors">Cadastrar</router-link>
           </div>
@@ -142,12 +144,26 @@
 </template>
 
 <script setup>
+import { ref, onMounted } from 'vue'
 import { imgUrl } from '../config.js'
+import TermsModal from '../components/TermsModal.vue'
 
 /**
  * Página inicial do sistema - Landing page moderna e responsiva
  * Exibe banner, funcionalidades e call-to-action
  */
+
+// Controle do modal de aceitação de termos
+const showTermsModal = ref(false)
+
+onMounted(() => {
+  // Exibe o modal se o usuário ainda não aceitou os termos
+  const termsAccepted = localStorage.getItem('terms_accepted')
+  if (!termsAccepted) {
+    showTermsModal.value = true
+  }
+})
+
 const stats = [
   { label: 'Veículos', value: '100+' },
   { label: 'Motoristas', value: '50+' },
@@ -158,22 +174,22 @@ const features = [
   {
     title: 'Veículos',
     description: 'Cadastro completo de veículos com placas, modelos e documentação.',
-    icon: 'M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4',
+    image: 'vehicle.jpg',
   },
   {
     title: 'Motoristas',
     description: 'Gestão de motoristas com documentos, contatos e histórico.',
-    icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z',
+    image: 'driver.jpg',
   },
   {
     title: 'Viagens',
     description: 'Planejamento e acompanhamento de viagens com previsões.',
-    icon: 'M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7',
+    image: 'trip.jpg',
   },
   {
     title: 'Manutenções',
     description: 'Agendamento e controle de manutenções preventivas e corretivas.',
-    icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z',
+    image: 'mechanics.jpg',
   },
 ]
 </script>

@@ -1,0 +1,1 @@
+var e=`/imgs`;function t(t){return`${e}/${t}`}export{t};

@@ -1,0 +1,139 @@
+<template>
+  <div class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <!-- Header -->
+    <header class="border-b border-slate-700/50 backdrop-blur-sm bg-slate-900/80 sticky top-0 z-50">
+      <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+        <router-link to="/" class="flex items-center space-x-3">
+          <img :src="imgUrl('logo2.svg')" alt="Slim App" class="h-8 w-auto drop-shadow-lg" />
+          <span class="text-xl font-bold bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">Slim App</span>
+        </router-link>
+        <router-link to="/" class="text-slate-400 hover:text-emerald-400 text-sm transition-colors">
+          &larr; Voltar
+        </router-link>
+      </div>
+    </header>
+
+    <!-- Conteúdo -->
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div class="bg-slate-800/30 border border-slate-700/50 rounded-xl p-8 md:p-12">
+        <h1 class="text-3xl font-bold text-white mb-2">Política de Privacidade</h1>
+        <p class="text-slate-500 text-sm mb-8">Última atualização: 18 de maio de 2026</p>
+
+        <div class="prose prose-invert max-w-none space-y-6 text-slate-300">
+          <section>
+            <h2 class="text-xl font-semibold text-white mb-3">1. Introdução</h2>
+            <p>
+              O Slim App ("Sistema") está comprometido com a proteção da sua privacidade e com a
+              transparência no tratamento dos seus dados pessoais. Esta Política de Privacidade
+              descreve como coletamos, usamos, armazenamos e protegemos suas informações em
+              conformidade com a Lei Geral de Proteção de Dados (LGPD - Lei nº 13.709/2018).
+            </p>
+          </section>
+
+          <section>
+            <h2 class="text-xl font-semibold text-white mb-3">2. Dados que Coletamos</h2>
+            <p>Para o funcionamento adequado do Sistema, coletamos os seguintes dados:</p>
+            <ul class="list-disc pl-6 mt-2 space-y-1">
+              <li><strong>Dados cadastrais:</strong> nome completo, e-mail, CPF, telefone e dados profissionais;</li>
+              <li><strong>Dados de localização:</strong> coordenadas geográficas durante o uso do Sistema para rastreamento e segurança da frota;</li>
+              <li><strong>Dados de acesso:</strong> endereço de IP, data e hora do acesso, tipo de navegador e sistema operacional;</li>
+              <li><strong>Dados de veículos e motoristas:</strong> informações necessárias para a gestão da frota, como documentação, habilitações e histórico.</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2 class="text-xl font-semibold text-white mb-3">3. Como Utilizamos seus Dados</h2>
+            <p>Seus dados são utilizados exclusivamente para:</p>
+            <ul class="list-disc pl-6 mt-2 space-y-1">
+              <li>Operar, manter e melhorar o Sistema de Gestão de Frotas;</li>
+              <li>Garantir a segurança das operações e dos dados armazenados;</li>
+              <li>Cumprir obrigações legais e regulatórias;</li>
+              <li>Detectar, prevenir e responder a incidentes de segurança;</li>
+              <li>Gerar relatórios e análises para a gestão da frota.</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2 class="text-xl font-semibold text-white mb-3">4. Compartilhamento de Dados</h2>
+            <p class="font-semibold text-emerald-400">
+              O Slim App NÃO vende, aluga ou comercializa seus dados pessoais para terceiros.
+            </p>
+            <p class="mt-2">
+              Seus dados poderão ser compartilhados apenas nas seguintes situações:
+            </p>
+            <ul class="list-disc pl-6 mt-2 space-y-1">
+              <li>Por determinação judicial ou requisição de autoridades competentes;</li>
+              <li>Para cumprimento de obrigações legais e regulatórias;</li>
+              <li>Com prestadores de serviços essenciais ao funcionamento do Sistema (como serviços de hospedagem e infraestrutura em nuvem), que estão contratualmente obrigados a manter a confidencialidade e segurança dos dados.</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2 class="text-xl font-semibold text-white mb-3">5. Segurança dos Dados</h2>
+            <p>
+              Adotamos medidas técnicas e organizacionais robustas para proteger seus dados,
+              alinhadas aos padrões da ISO 27001:
+            </p>
+            <ul class="list-disc pl-6 mt-2 space-y-1">
+              <li><strong>Criptografia em trânsito:</strong> todas as comunicações são protegidas via TLS/SSL;</li>
+              <li><strong>Criptografia em repouso:</strong> dados sensíveis são armazenados de forma criptografada;</li>
+              <li><strong>Hash de senhas:</strong> utilizamos Argon2id, o algoritmo mais seguro disponível;</li>
+              <li><strong>Controle de acesso:</strong> sistema de permissões baseado em papéis (RBAC) com níveis ADMIN e OPERATIONAL;</li>
+              <li><strong>Monitoramento contínuo:</strong> auditoria de acessos e detecção de atividades suspeitas;</li>
+              <li><strong>Infraestrutura segura:</strong> servidores em datacenters com certificações de segurança.</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2 class="text-xl font-semibold text-white mb-3">6. Retenção e Eliminação de Dados</h2>
+            <p>
+              Seus dados serão mantidos pelo período de até <strong>5 (cinco) anos</strong> após
+              o último acesso ao Sistema, conforme permitido pela legislação vigente para fins
+              de auditoria e cumprimento de obrigações legais. Após este período, os dados serão
+              anonimizados ou eliminados de forma segura.
+            </p>
+            <p class="mt-2">
+              Você pode solicitar a exclusão antecipada dos seus dados a qualquer momento,
+              exceto quando houver obrigação legal de manutenção.
+            </p>
+          </section>
+
+          <section>
+            <h2 class="text-xl font-semibold text-white mb-3">7. Seus Direitos (LGPD)</h2>
+            <p>Como titular dos dados, você possui os seguintes direitos:</p>
+            <ul class="list-disc pl-6 mt-2 space-y-1">
+              <li>Confirmar a existência de tratamento de seus dados;</li>
+              <li>Acessar seus dados pessoais;</li>
+              <li>Corrigir dados incompletos, inexatos ou desatualizados;</li>
+              <li>Solicitar a anonimização, bloqueio ou eliminação de dados desnecessários;</li>
+              <li>Solicitar a portabilidade dos dados a outro fornecedor;</li>
+              <li>Revogar o consentimento a qualquer momento;</li>
+              <li>Solicitar a revisão de decisões automatizadas.</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2 class="text-xl font-semibold text-white mb-3">8. Contato</h2>
+            <p>
+              Em caso de dúvidas sobre esta Política de Privacidade ou para exercer seus direitos,
+              entre em contato conosco através dos canais oficiais do Slim App.
+            </p>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-700/50 py-8">
+      <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <p class="text-sm text-slate-500">
+          &copy; {{ new Date().getFullYear() }} Slim App. Todos os direitos reservados.
+        </p>
+      </div>
+    </footer>
+  </div>
+</template>
+
+<script setup>
+import { imgUrl } from '../config.js'
+</script>
