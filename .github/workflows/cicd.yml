@@ -11,16 +11,25 @@ jobs:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
 
+      - name: 🐘 Configurar PHP (Necessário para as ferramentas locais no Runner)
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2' # Altere para a versão do seu PHP se necessário
+          extensions: mbstring, xml, ctype, iconv, mysql, pgsql
+
+      - name: 📦 Instalar dependências do Composer no Runner
+        run: composer install --no-interaction --prefer-dist
+
       - name: 🟢 Configurar Node.js (Para os assets/frontend)
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'npm'
 
-      - name: 📦 Instalar dependências do Node e Rodar Builds
+      - name: 📦 Instalar dependências do Node e Rodar Builds + Migrations locais
         run: |
           npm ci
-          # Executa o comando de deploy/build que você possui no seu package.json
+          # Agora que o PHP e o Vendor existem no Runner, o deploy roda sem erros!
           npm run deploy
 
       - name: 🤐 Criar Pacote de Deploy Estruturado
@@ -61,10 +70,23 @@ jobs:
                 sudo apt-get update -y && sudo apt-get install unzip -y
             fi
 
-            # 2. Garante que a pasta base existe e limpa o conteúdo antigo
+            # 2. Garante que as pastas base existem (inclusive a storage real para não perder uploads)
             sudo mkdir -p "$BASE_DIR"
+            sudo mkdir -p "$BASE_DIR/storage/imgs"
+            
+            # Movemos a pasta de uploads real temporariamente para o /tmp para não apagá-la no 'rm -rf'
+            if [ -d "$BASE_DIR/storage/imgs" ]; then
+                sudo mv "$BASE_DIR/storage/imgs" /tmp/storage_imgs_backup
+            fi
+
             echo "🧹 Limpando diretório antigo..."
             sudo rm -rf "${BASE_DIR:?}"/*
+
+            # Restauramos a pasta de uploads segura
+            sudo mkdir -p "$BASE_DIR/storage"
+            if [ -d "/tmp/storage_imgs_backup" ]; then
+                sudo mv /tmp/storage_imgs_backup "$BASE_DIR/storage/imgs"
+            fi
 
             # 3. Descompacta o novo pacote estruturado
             echo "📂 Descompactando novo pacote..."
@@ -87,13 +109,13 @@ jobs:
                     --prefer-dist
             fi
 
-            # 5. Executa os scripts NPM solicitados diretamente no ambiente do servidor
+            # 5. Executa o storage:link no servidor para criar os links simbólicos corretos na máquina web
             echo "⚙️ Executando comandos Node no Servidor..."
             if command -v npm &> /dev/null; then
-                # Roda o link de armazenamento (ex: criar pasta de uploads/links simbólicos)
                 npm run storage:link --if-present || echo "⚠️ Script storage:link falhou ou não existe"
             else
-                echo "⚠️ Node/NPM não está instalado globalmente no servidor. Pulando comandos npm."
+                echo "⚠️ Node/NPM não está instalado globalmente no servidor. Tentando rodar link direto via PHP..."
+                php -r "if(!is_link('public/imgs')) { symlink('../storage/imgs', 'public/imgs'); }"
             fi
 
             # 6. Ajustar permissões finais para o Nginx (Garante dono e grupo corretos)
@@ -104,6 +126,7 @@ jobs:
 
             # 7. Limpeza do arquivo temporário
             rm -f /tmp/deploy-slim.zip
+            sudo rm -rf /tmp/storage_imgs_backup
             
             echo "✅ Deploy Slim Finalizado com sucesso com TODAS as pastas e links criados!"
           EOF
