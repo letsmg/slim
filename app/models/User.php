@@ -12,6 +12,9 @@ class User extends Model
         'name',
         'email',
         'password',
+        'level',
+        'active',
+        'photo',
     ];
 
     protected $hidden = [

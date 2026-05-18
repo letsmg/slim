@@ -1,12 +1,12 @@
 <template>
   <div>
-        <!-- Cabeçalho -->
+        <!-- Cabecalho -->
         <div class="mb-8">
-            <h1 class="text-2xl font-bold text-gray-900">Relatórios</h1>
-            <p class="mt-1 text-sm text-gray-500">Visualize métricas e estatísticas do sistema</p>
+            <h1 class="text-2xl font-bold text-gray-900">Relatorios</h1>
+            <p class="mt-1 text-sm text-gray-500">Visualize metricas e estatisticas do sistema de frotas</p>
         </div>
 
-        <!-- Cards de Métricas -->
+        <!-- Cards de Metricas com dados reais da API -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <div
                 v-for="metric in metrics"
@@ -25,40 +25,36 @@
                 </div>
                 <p class="text-3xl font-bold text-gray-900 mb-1">{{ metric.value }}</p>
                 <p class="text-sm text-gray-500">{{ metric.label }}</p>
-                <p v-if="metric.change" class="mt-2 text-xs" :class="metric.change > 0 ? 'text-green-600' : 'text-red-600'">
-                    {{ metric.change > 0 ? '↑' : '↓' }} {{ Math.abs(metric.change) }}% em relação ao mês anterior
-                </p>
             </div>
         </div>
 
-        <!-- Tabela de Relatórios Detalhados -->
+        <!-- Tabela de Relatorios Detalhados -->
         <div class="bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden">
             <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
-                <h2 class="text-lg font-semibold text-gray-900">Relatórios Detalhados</h2>
+                <h2 class="text-lg font-semibold text-gray-900">Relatorios Detalhados</h2>
             </div>
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Relatório</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Período</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Última Atualização</th>
-                            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Relatorio</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descricao</th>
+                            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acoes</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
                         <tr v-for="report in reports" :key="report.id" class="hover:bg-gray-50 transition-colors">
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ report.name }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ report.period }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ report.total }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ report.updatedAt }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-500">{{ report.description }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                 <button @click="viewReport(report)" class="text-indigo-600 hover:text-indigo-900 mr-3">
                                     Visualizar
                                 </button>
-                                <button @click="downloadReport(report)" class="text-gray-600 hover:text-gray-900">
-                                    Download
+                                <button @click="downloadReport(report)" class="text-gray-600 hover:text-gray-900 mr-3">
+                                    Download PDF
+                                </button>
+                                <button @click="downloadCsv(report)" class="text-green-600 hover:text-green-900">
+                                    CSV Power BI
                                 </button>
                             </td>
                         </tr>
@@ -70,85 +66,145 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import axios from 'axios'
 
 /**
- * Métricas do dashboard
+ * Pagina de relatorios - Dashboard com metricas reais da frota
+ * Busca dados da API /api/reports/general e exibe cards com totais
  */
+
+const API_BASE = '/api'
+
 const metrics = ref([
     {
-        label: 'Usuários Ativos',
-        value: '1.234',
-        change: 12,
+        label: 'Usuarios Ativos',
+        value: '...',
         bgColor: 'bg-blue-100',
         iconColor: 'text-blue-600',
         icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z',
     },
     {
-        label: 'Produtos Cadastrados',
-        value: '567',
-        change: -3,
+        label: 'Veiculos Cadastrados',
+        value: '...',
         bgColor: 'bg-purple-100',
         iconColor: 'text-purple-600',
         icon: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4',
     },
     {
-        label: 'Vendas no Mês',
-        value: 'R$ 89.234',
-        change: 8,
+        label: 'Viagens no Mes',
+        value: '...',
         bgColor: 'bg-green-100',
         iconColor: 'text-green-600',
         icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
     },
     {
-        label: 'Ticket Médio',
-        value: 'R$ 157,00',
-        change: 5,
+        label: 'Manutencoes',
+        value: '...',
         bgColor: 'bg-yellow-100',
         iconColor: 'text-yellow-600',
         icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
     },
 ])
 
-/**
- * Lista de relatórios detalhados
- */
 const reports = ref([
     {
-        id: 1,
-        name: 'Relatório de Usuários',
-        period: 'Abril 2026',
-        total: '1.500 usuários',
-        updatedAt: '15/04/2026 10:30',
+        id: 'general',
+        name: 'Relatorio Geral',
+        description: 'Estatisticas gerais do sistema (usuarios, veiculos, viagens e manutencoes)',
     },
     {
-        id: 2,
-        name: 'Relatório de Produtos',
-        period: 'Abril 2026',
-        total: '230 produtos',
-        updatedAt: '15/04/2026 10:30',
+        id: 'users',
+        name: 'Relatorio de Usuarios',
+        description: 'Detalhamento de usuarios cadastrados e status',
     },
     {
-        id: 3,
-        name: 'Relatório Financeiro',
-        period: '1º Trimestre 2026',
-        total: 'R$ 250.000,00',
-        updatedAt: '01/04/2026 08:00',
+        id: 'vehicles',
+        name: 'Relatorio de Veiculos',
+        description: 'Detalhamento de veiculos cadastrados',
     },
     {
-        id: 4,
-        name: 'Relatório de Acessos',
-        period: 'Abril 2026',
-        total: '45.000 visitas',
-        updatedAt: '15/04/2026 10:30',
+        id: 'trips',
+        name: 'Relatorio de Viagens',
+        description: 'Detalhamento de viagens por status',
+    },
+    {
+        id: 'maintenances',
+        name: 'Relatorio de Manutencoes',
+        description: 'Detalhamento de manutencoes programadas',
     },
 ])
 
+/**
+ * Busca dados reais da API ao montar o componente
+ */
+onMounted(async () => {
+    try {
+        const response = await axios.get(`${API_BASE}/reports/general`)
+        if (response.data.success) {
+            const data = response.data.report
+            metrics.value = [
+                {
+                    label: 'Usuarios Ativos',
+                    value: data.users?.active ?? 0,
+                    bgColor: 'bg-blue-100',
+                    iconColor: 'text-blue-600',
+                    icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z',
+                },
+                {
+                    label: 'Veiculos Cadastrados',
+                    value: data.vehicles?.total ?? 0,
+                    bgColor: 'bg-purple-100',
+                    iconColor: 'text-purple-600',
+                    icon: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4',
+                },
+                {
+                    label: 'Viagens no Mes',
+                    value: data.trips?.this_month ?? 0,
+                    bgColor: 'bg-green-100',
+                    iconColor: 'text-green-600',
+                    icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
+                },
+                {
+                    label: 'Manutencoes',
+                    value: data.maintenances?.total ?? 0,
+                    bgColor: 'bg-yellow-100',
+                    iconColor: 'text-yellow-600',
+                    icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
+                },
+            ]
+        }
+    } catch (error) {
+        console.error('Erro ao carregar metricas:', error)
+    }
+})
+
+/**
+ * Abre o relatorio em PDF em uma nova aba para visualizacao inline
+ */
 function viewReport(report) {
-    alert(`Visualizar relatório: ${report.name}`)
+    window.open(`${API_BASE}/reports/${report.id}/pdf/view`, '_blank')
 }
 
+/**
+ * Faz o download do relatorio em PDF
+ */
 function downloadReport(report) {
-    alert(`Download do relatório: ${report.name}`)
+    const link = document.createElement('a')
+    link.href = `${API_BASE}/reports/${report.id}/pdf`
+    link.download = `${report.id}-relatorio.pdf`
+    link.target = '_blank'
+    link.click()
+}
+
+/**
+ * Faz o download do relatorio em CSV para Power BI
+ */
+function downloadCsv(report) {
+    const link = document.createElement('a')
+    link.href = `${API_BASE}/reports/${report.id}/csv`
+    link.download = `${report.id}-relatorio.csv`
+    link.target = '_blank'
+    link.click()
 }
 </script>

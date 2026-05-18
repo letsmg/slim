@@ -1,4 +1,4 @@
-o <template>
+<template>
   <div>
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
       <div>
@@ -47,6 +47,12 @@ o <template>
 
     <!-- Modal -->
     <FormModal :open="modalOpen" :title="editing ? 'Editar Motorista' : 'Novo Motorista'" :form="form" entity="drivers" @close="closeModal">
+      <!-- Erros de validacao -->
+      <div v-if="validationErrors" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm mb-4">
+        <ul class="list-disc list-inside space-y-1">
+          <li v-for="(msg, field) in validationErrors" :key="field">{{ msg }}</li>
+        </ul>
+      </div>
       <form class="space-y-4">
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Nome</label>
@@ -121,6 +127,18 @@ o <template>
             <label for="driver-pendencias" class="ml-2 text-sm text-gray-700">Possui pendências</label>
           </div>
         </div>
+
+        <!-- Fotos do Motorista -->
+        <div class="border-t border-gray-200 pt-4">
+          <h4 class="text-sm font-semibold text-gray-700 mb-3">Fotos e Documentos</h4>
+          <div class="grid grid-cols-2 gap-4">
+            <PhotoUpload v-model="form.photo" label="Foto do Motorista" />
+            <PhotoUpload v-model="form.cnh_photo" label="Foto da CNH" />
+            <PhotoUpload v-model="form.toxicological_photo" label="Toxicológico" />
+            <PhotoUpload v-model="form.nr35_photo" label="NR-35" />
+            <PhotoUpload v-model="form.nr20_photo" label="NR-20" />
+          </div>
+        </div>
       </form>
 
       <template #footer>
@@ -137,11 +155,13 @@ o <template>
 import { ref, reactive, onMounted, computed } from 'vue'
 import api from '@/services/api'
 import FormModal from '@components/FormModal.vue'
+import PhotoUpload from '@components/PhotoUpload.vue'
 
 const drivers = ref([])
 const modalOpen = ref(false)
 const editing = ref(null)
 const saving = ref(false)
+const validationErrors = ref(null)
 
 /**
  * Nível do usuário logado (vem do sessionStorage setado no login)
@@ -153,6 +173,7 @@ const form = reactive({
   nome: '', cpf: '', rg: '', cnh: '', categoria_cnh: 'D',
   endereco: '', bairro: '', cidade: '', estado: 'SP', cep: '',
   toxicologico: false, pendencias: false,
+  photo: '', cnh_photo: '', toxicological_photo: '', nr35_photo: '', nr20_photo: '',
 })
 
 onMounted(async () => {
@@ -164,42 +185,55 @@ onMounted(async () => {
 
 function openCreateModal() {
   editing.value = null
+  validationErrors.value = null
   Object.assign(form, {
     nome: '', cpf: '', rg: '', cnh: '', categoria_cnh: 'D',
     endereco: '', bairro: '', cidade: '', estado: 'SP', cep: '',
     toxicologico: false, pendencias: false,
+    photo: '', cnh_photo: '', toxicological_photo: '', nr35_photo: '', nr20_photo: '',
   })
   modalOpen.value = true
 }
 
 function editDriver(d) {
   editing.value = d
+  validationErrors.value = null
   Object.assign(form, {
     nome: d.nome, cpf: d.cpf, rg: d.rg || '', cnh: d.cnh,
     categoria_cnh: d.categoria_cnh || 'D',
     endereco: d.endereco || '', bairro: d.bairro || '',
     cidade: d.cidade || '', estado: d.estado || 'SP', cep: d.cep || '',
     toxicologico: !!d.toxicologico, pendencias: !!d.pendencias,
+    photo: d.photo || '', cnh_photo: d.cnh_photo || '',
+    toxicological_photo: d.toxicological_photo || '',
+    nr35_photo: d.nr35_photo || '', nr20_photo: d.nr20_photo || '',
   })
   modalOpen.value = true
 }
 
-function closeModal() { modalOpen.value = false; editing.value = null }
+function closeModal() { modalOpen.value = false; editing.value = null; validationErrors.value = null }
 
 async function saveDriver() {
   saving.value = true
+  validationErrors.value = null
   try {
     if (editing.value) {
-      await api.put(`/api/drivers/${editing.value.id}`, form)
+      const res = await api.put(`/api/drivers/${editing.value.id}`, form)
       const idx = drivers.value.findIndex(d => d.id === editing.value.id)
-      if (idx !== -1) drivers.value[idx] = { ...editing.value, ...form }
+      if (idx !== -1) drivers.value[idx] = { ...drivers.value[idx], ...res.data?.driver }
     } else {
       const res = await api.post('/api/drivers', form)
       drivers.value.push(res.data?.driver || { ...form, id: Date.now() })
     }
     closeModal()
-  } catch (e) { console.error('Erro ao salvar:', e); alert('Erro ao salvar.') }
-  finally { saving.value = false }
+  } catch (e) {
+    const errors = e.response?.data?.errors
+    if (errors) {
+      validationErrors.value = errors
+    } else {
+      alert('Erro ao salvar. Verifique os dados e tente novamente.')
+    }
+  } finally { saving.value = false }
 }
 
 async function deleteDriver(d) {

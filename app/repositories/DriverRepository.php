@@ -33,8 +33,8 @@ class DriverRepository
     {
         $query = Driver::query();
 
-        if (!empty($filters['nome'])) {
-            $query->where('nome', 'like', '%' . $filters['nome'] . '%');
+        if (!empty($filters['name'])) {
+            $query->where('name', 'like', '%' . $filters['name'] . '%');
         }
 
         if (!empty($filters['cpf'])) {

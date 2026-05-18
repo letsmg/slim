@@ -197,9 +197,16 @@ const userEmail = computed(() => props.user?.email || '')
 const userInitials = computed(() => {
     const name = userName.value
     const parts = name.split(' ')
-    return parts.length > 1
-        ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
-        : name.substring(0, 2).toUpperCase()
+    // Pega a primeira letra do primeiro nome
+    const firstInitial = parts[0]?.charAt(0) || ''
+    // Se tiver mais de um nome, pega a primeira letra do último nome
+    const lastInitial = parts.length > 1 ? parts[parts.length - 1].charAt(0) : ''
+    return (firstInitial + lastInitial).toUpperCase()
+})
+const userFirstName = computed(() => {
+    const name = userName.value
+    const parts = name.split(' ')
+    return parts[0] || name
 })
 
 /**

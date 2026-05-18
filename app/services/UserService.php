@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\User;
 use App\Repositories\UserRepository;
+use App\Requests\StoreUserRequest;
 
 class UserService
 {
@@ -18,9 +19,9 @@ class UserService
     {
         $data = sanitize_inputs($data);
 
-        if (!validate_email($data['email'] ?? '')) {
-            throw new \InvalidArgumentException('Email inválido');
-        }
+        // Valida com StoreUserRequest
+        $request = new StoreUserRequest();
+        $data = $request->validated($data);
 
         return $this->userRepository->create($data);
     }
@@ -75,9 +76,9 @@ class UserService
     {
         $data = sanitize_inputs($data);
 
-        if (isset($data['email']) && !validate_email($data['email'])) {
-            throw new \InvalidArgumentException('Email inválido');
-        }
+        // Valida com StoreUserRequest ignorando o próprio ID
+        $request = new StoreUserRequest($id);
+        $data = $request->validated($data);
 
         return $this->userRepository->update($id, $data);
     }

@@ -7,22 +7,23 @@ use Illuminate\Database\Eloquent\Model;
 class Driver extends Model
 {
     protected $fillable = [
-        'nome',
+        'name',
         'cpf',
         'rg',
         'cnh',
-        'categoria_cnh',
-        'endereco',
-        'bairro',
-        'cidade',
-        'estado',
-        'cep',
-        'toxicologico',
-        'pendencias',
+        'cnh_category',
+        'address',
+        'neighborhood',
+        'city',
+        'state',
+        'zipcode',
+        'toxicological',
+        'pending_issues',
+        'photo',
     ];
 
     protected $casts = [
-        'toxicologico' => 'boolean',
-        'pendencias' => 'boolean',
+        'toxicological' => 'boolean',
+        'pending_issues' => 'boolean',
     ];
 }

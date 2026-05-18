@@ -44,6 +44,8 @@ if (session_status() === PHP_SESSION_NONE) {
     ini_set('session.use_only_cookies', '1');
     ini_set('session.cookie_httponly', '1');
     ini_set('session.cookie_samesite', 'Lax');
+    ini_set('session.gc_maxlifetime', '300'); // 5 minutos
+    ini_set('session.cookie_lifetime', '300'); // 5 minutos
     if ($config['app']['env'] === 'production') {
         ini_set('session.cookie_secure', '1');
     }

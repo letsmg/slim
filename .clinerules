@@ -21,7 +21,9 @@ Inovação e Melhores Práticas: Caso seja solicitada uma implementação e exis
 3. Padrões de Código, Nomenclatura e Documentação
 Formatação Inteligente: Se for solicitado criar/alterar um arquivo em letras minúsculas, mas o padrão da arquitetura/linguagem exigir CamelCase, snake_case ou PascalCase, ignore a formatação do pedido e siga estritamente o padrão técnico exigido pela stack.
 
-Banco de Dados Internacionalizado: Todas as tabelas, colunas, chaves e relacionamentos de banco de dados devem ser obrigatoriamente nomeados em inglês.
+Banco de Dados Internacionalizado: Todas as tabelas, colunas, chaves e relacionamentos de banco de dados ou controllers, classes, repositories, policies, etc, devem ser obrigatoriamente nomeados em inglês. Se eu te pedir para criar um campo tabela ou arquivo, traduza e faça em inglês. Apenas o front-end do site que será visível aos usuários estará em português.
+
+
 
 Comentários Diretos: Sempre comente códigos gerados ou alterados de forma resumida, direta e focada no PORQUÊ (intenção) daquela lógica, e não no que o código faz de forma óbvia.
 
@@ -69,7 +71,7 @@ O sistema possui regras rígidas de acesso à frota que devem ser validadas em n
 
 ADMIN: Acesso total e irrestrito a todas as rotas, leitura, escrita, deleção e configurações do ecossistema.
 
-OPERATIONAL: Monitoramento diário. Pode apenas visualizar (leitura) as informações de motoristas, veículos e documentações. Nunca poderá apagar dados, excluir cadastros ou realizar alterações estruturais.
+OPERATIONAL: Monitoramento diário. Pode apenas visualizar (leitura) as informações de motoristas, veículos, documentações e outros usuários operacional e suporte. Nunca poderá apagar dados, excluir cadastros ou realizar alterações estruturais.
 
 5. Ciclo de Builds e Scripts Globais (Ambiente Local vs Produção)
 O projeto é regido pelos seguintes comandos do package.json, que controlam o ciclo do frontend e os servidores locais:

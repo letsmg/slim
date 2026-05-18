@@ -21,7 +21,7 @@ return [
 
     'session' => [
         'driver'   => $_ENV['SESSION_DRIVER'] ?? 'file',
-        'lifetime' => $_ENV['SESSION_LIFETIME'] ?? 120,
+        'lifetime' => $_ENV['SESSION_LIFETIME'] ?? 5,
     ],
 
     'cache' => [

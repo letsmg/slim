@@ -5,44 +5,50 @@ namespace App\Requests;
 use App\Models\Driver;
 
 /**
- * Validação para criação/atualização de motorista
- * Segue ISO 27001: sanitização e validação rigorosa de entradas
+ * Validacao para criacao/atualizacao de motorista
+ * Segue ISO 27001: sanitizacao e validacao rigorosa de entradas
  * Valida unicidade de CPF
+ * Campos em ingles conforme regra do projeto (.clinerules)
  */
 class StoreDriverRequest
 {
     private array $rules = [
-        'nome'           => 'required|string|max:255|sanitize',
+        'name'           => 'required|string|max:255|sanitize',
         'cpf'            => 'required|string|max:14|sanitize',
         'rg'             => 'string|max:20|sanitize',
         'cnh'            => 'required|string|max:20|sanitize',
-        'categoria_cnh'  => 'required|string|max:5|sanitize',
-        'endereco'       => 'string|max:255|sanitize',
-        'bairro'         => 'string|max:100|sanitize',
-        'cidade'         => 'string|max:100|sanitize',
-        'estado'         => 'string|max:2|sanitize',
-        'cep'            => 'string|max:10|sanitize',
-        'toxicologico'   => 'boolean',
-        'pendencias'     => 'boolean',
+        'cnh_category'   => 'required|string|max:5|sanitize',
+        'address'        => 'string|max:255|sanitize',
+        'neighborhood'   => 'string|max:100|sanitize',
+        'city'           => 'string|max:100|sanitize',
+        'state'          => 'string|max:2|sanitize',
+        'zipcode'        => 'string|max:10|sanitize',
+        'toxicological'       => 'boolean',
+        'pending_issues'      => 'boolean',
+        'photo'               => 'string',
+        'cnh_photo'           => 'string',
+        'toxicological_photo' => 'string',
+        'nr35_photo'          => 'string',
+        'nr20_photo'          => 'string',
     ];
 
     private array $messages = [
-        'nome.required'          => 'O nome é obrigatório.',
-        'nome.max'               => 'O nome deve ter no máximo 255 caracteres.',
-        'cpf.required'           => 'O CPF é obrigatório.',
-        'cpf.max'                => 'O CPF deve ter no máximo 14 caracteres.',
-        'rg.max'                 => 'O RG deve ter no máximo 20 caracteres.',
-        'cnh.required'           => 'A CNH é obrigatória.',
-        'cnh.max'                => 'A CNH deve ter no máximo 20 caracteres.',
-        'categoria_cnh.required' => 'A categoria da CNH é obrigatória.',
-        'categoria_cnh.max'      => 'A categoria da CNH deve ter no máximo 5 caracteres.',
-        'endereco.max'           => 'O endereço deve ter no máximo 255 caracteres.',
-        'bairro.max'             => 'O bairro deve ter no máximo 100 caracteres.',
-        'cidade.max'             => 'A cidade deve ter no máximo 100 caracteres.',
-        'estado.max'             => 'O estado deve ter no máximo 2 caracteres.',
-        'cep.max'                => 'O CEP deve ter no máximo 10 caracteres.',
-        'toxicologico.boolean'   => 'O campo toxicológico deve ser verdadeiro ou falso.',
-        'pendencias.boolean'     => 'O campo pendências deve ser verdadeiro ou falso.',
+        'name.required'           => 'O nome e obrigatorio.',
+        'name.max'                => 'O nome deve ter no maximo 255 caracteres.',
+        'cpf.required'            => 'O CPF e obrigatorio.',
+        'cpf.max'                 => 'O CPF deve ter no maximo 14 caracteres.',
+        'rg.max'                  => 'O RG deve ter no maximo 20 caracteres.',
+        'cnh.required'            => 'A CNH e obrigatoria.',
+        'cnh.max'                 => 'A CNH deve ter no maximo 20 caracteres.',
+        'cnh_category.required'   => 'A categoria da CNH e obrigatoria.',
+        'cnh_category.max'        => 'A categoria da CNH deve ter no maximo 5 caracteres.',
+        'address.max'             => 'O endereco deve ter no maximo 255 caracteres.',
+        'neighborhood.max'        => 'O bairro deve ter no maximo 100 caracteres.',
+        'city.max'                => 'A cidade deve ter no maximo 100 caracteres.',
+        'state.max'               => 'O estado deve ter no maximo 2 caracteres.',
+        'zipcode.max'             => 'O CEP deve ter no maximo 10 caracteres.',
+        'toxicological.boolean'   => 'O campo toxicologico deve ser verdadeiro ou falso.',
+        'pending_issues.boolean'  => 'O campo pendencias deve ser verdadeiro ou falso.',
     ];
 
     private ?int $ignoreId = null;
@@ -67,7 +73,7 @@ class StoreDriverRequest
                 }
 
                 if ($rule === 'required' && ($value === null || $value === '')) {
-                    $errors[$field] = $this->messages["{$field}.required"] ?? "O campo {$field} é obrigatório.";
+                    $errors[$field] = $this->messages["{$field}.required"] ?? "O campo {$field} e obrigatorio.";
                     break;
                 }
 
@@ -79,7 +85,7 @@ class StoreDriverRequest
                 if (str_starts_with($rule, 'max:')) {
                     $max = (int) substr($rule, 4);
                     if (is_string($value) && strlen($value) > $max) {
-                        $errors[$field] = $this->messages["{$field}.max"] ?? "O campo {$field} deve ter no máximo {$max} caracteres.";
+                        $errors[$field] = $this->messages["{$field}.max"] ?? "O campo {$field} deve ter no maximo {$max} caracteres.";
                         break;
                     }
                 }
@@ -105,7 +111,7 @@ class StoreDriverRequest
                 $query->where('id', '!=', $this->ignoreId);
             }
             if ($query->exists()) {
-                $errors['cpf'] = 'Este CPF já está cadastrado para outro motorista.';
+                $errors['cpf'] = 'Este CPF ja esta cadastrado para outro motorista.';
             }
         }
 

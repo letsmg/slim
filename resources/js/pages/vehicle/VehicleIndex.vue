@@ -50,6 +50,12 @@
 
     <!-- Modal -->
     <FormModal :open="modalOpen" :title="editing ? 'Editar Veículo' : 'Novo Veículo'" :form="form" entity="vehicles" @close="closeModal">
+      <!-- Erros de validacao -->
+      <div v-if="validationErrors" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm mb-4">
+        <ul class="list-disc list-inside space-y-1">
+          <li v-for="(msg, field) in validationErrors" :key="field">{{ msg }}</li>
+        </ul>
+      </div>
       <form class="space-y-4">
         <div class="grid grid-cols-2 gap-4">
           <div>
@@ -114,6 +120,15 @@
             <input v-model="form.dt_proxima_revisao" type="date" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
           </div>
         </div>
+
+        <!-- Fotos do Veiculo -->
+        <div class="border-t border-gray-200 pt-4">
+          <h4 class="text-sm font-semibold text-gray-700 mb-3">Fotos do Veículo</h4>
+          <GalleryUpload v-model="form.photos" label="Galeria de Fotos" />
+          <div class="mt-4">
+            <PhotoUpload v-model="form.antt_photo" label="Foto ANTT" />
+          </div>
+        </div>
       </form>
 
       <template #footer>
@@ -130,16 +145,21 @@
 import { ref, reactive, onMounted } from 'vue'
 import api from '@/services/api'
 import FormModal from '@components/FormModal.vue'
+import PhotoUpload from '@components/PhotoUpload.vue'
+import GalleryUpload from '@components/GalleryUpload.vue'
 
 const vehicles = ref([])
 const modalOpen = ref(false)
 const editing = ref(null)
 const saving = ref(false)
+const validationErrors = ref(null)
 
 const form = reactive({
   marca: '', modelo: '', placa: '', eixos: 2, crlv: '', chassi: '', renavam: '',
   tipo_combustivel: 'Diesel',
   dt_ultima_revisao: '', dt_proxima_revisao: '', dt_compra: '',
+  photos: [], // Array de fotos (base64)
+  antt_photo: '',
 })
 
 onMounted(async () => {
@@ -153,43 +173,64 @@ onMounted(async () => {
 
 function openCreateModal() {
   editing.value = null
+  validationErrors.value = null
   Object.assign(form, {
     marca: '', modelo: '', placa: '', eixos: 2, crlv: '', chassi: '', renavam: '',
     tipo_combustivel: 'Diesel',
     dt_ultima_revisao: '', dt_proxima_revisao: '', dt_compra: '',
+    photos: [], antt_photo: '',
   })
   modalOpen.value = true
 }
 
 function editVehicle(v) {
   editing.value = v
+  validationErrors.value = null
+  // Converte as fotos existentes (photo1..photo6) em array para o GalleryUpload
+  const existingPhotos = []
+  for (let i = 1; i <= 6; i++) {
+    if (v[`photo${i}`]) existingPhotos.push(v[`photo${i}`])
+  }
   Object.assign(form, {
     marca: v.marca, modelo: v.modelo, placa: v.placa || '', eixos: v.eixos,
     crlv: v.crlv, chassi: v.chassi || '', renavam: v.renavam || '',
     tipo_combustivel: v.tipo_combustivel,
     dt_ultima_revisao: v.dt_ultima_revisao || '',
     dt_proxima_revisao: v.dt_proxima_revisao || '', dt_compra: v.dt_compra || '',
+    photos: existingPhotos, antt_photo: v.antt_photo || '',
   })
   modalOpen.value = true
 }
 
-function closeModal() { modalOpen.value = false; editing.value = null }
+function closeModal() { modalOpen.value = false; editing.value = null; validationErrors.value = null }
 
 async function saveVehicle() {
   saving.value = true
+  validationErrors.value = null
   try {
+    // Monta payload: converte array photos de volta para photo1..photo6
+    const payload = { ...form }
+    for (let i = 1; i <= 6; i++) {
+      payload[`photo${i}`] = form.photos[i - 1] || null
+    }
+    delete payload.photos
+
     if (editing.value) {
-      await api.put(`/api/vehicles/${editing.value.id}`, form)
+      const res = await api.put(`/api/vehicles/${editing.value.id}`, payload)
       const idx = vehicles.value.findIndex(v => v.id === editing.value.id)
-      if (idx !== -1) vehicles.value[idx] = { ...editing.value, ...form }
+      if (idx !== -1) vehicles.value[idx] = { ...vehicles.value[idx], ...res.data?.vehicle }
     } else {
-      const res = await api.post('/api/vehicles', form)
-      vehicles.value.push(res.data?.vehicle || { ...form, id: Date.now() })
+      const res = await api.post('/api/vehicles', payload)
+      vehicles.value.push(res.data?.vehicle || { ...payload, id: Date.now() })
     }
     closeModal()
   } catch (e) {
-    console.error('Erro ao salvar:', e)
-    alert('Erro ao salvar. Verifique o console.')
+    const errors = e.response?.data?.errors
+    if (errors) {
+      validationErrors.value = errors
+    } else {
+      alert('Erro ao salvar. Verifique os dados e tente novamente.')
+    }
   } finally { saving.value = false }
 }
 

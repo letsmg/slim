@@ -62,6 +62,12 @@
 
     <!-- Modal -->
     <FormModal :open="modalOpen" :title="editing ? 'Editar Manutenção' : 'Nova Manutenção'" :form="form" entity="maintenances" @close="closeModal">
+      <!-- Erros de validacao -->
+      <div v-if="validationErrors" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm mb-4">
+        <ul class="list-disc list-inside space-y-1">
+          <li v-for="(msg, field) in validationErrors" :key="field">{{ msg }}</li>
+        </ul>
+      </div>
       <form class="space-y-4">
         <div class="grid grid-cols-3 gap-4">
           <div>
@@ -142,6 +148,7 @@ const mechanics = ref([])
 const modalOpen = ref(false)
 const editing = ref(null)
 const saving = ref(false)
+const validationErrors = ref(null)
 
 const form = reactive({
   driver_id: '', vehicle_id: '', mechanic_id: '', scheduled_date: '',
@@ -166,12 +173,14 @@ onMounted(async () => {
 
 function openCreateModal() {
   editing.value = null
+  validationErrors.value = null
   Object.assign(form, { driver_id: '', vehicle_id: '', mechanic_id: '', scheduled_date: '', scheduled_time: '', contact: '', service: '', observations: '', completed: false, paid: false })
   modalOpen.value = true
 }
 
 function editMaintenance(item) {
   editing.value = item
+  validationErrors.value = null
   Object.assign(form, {
     driver_id: item.driver_id || '', vehicle_id: item.vehicle_id || '', mechanic_id: item.mechanic_id || '',
     scheduled_date: item.scheduled_date || '', scheduled_time: item.scheduled_time?.substring(0, 5) || '',
@@ -181,21 +190,38 @@ function editMaintenance(item) {
   modalOpen.value = true
 }
 
-function closeModal() { modalOpen.value = false; editing.value = null }
+function closeModal() { modalOpen.value = false; editing.value = null; validationErrors.value = null }
 
 async function saveMaintenance() {
   saving.value = true
+  validationErrors.value = null
   try {
     if (editing.value) {
-      await api.put(`/api/scheduled-maintenances/${editing.value.id}`, form)
+      const res = await api.put(`/api/scheduled-maintenances/${editing.value.id}`, form)
       const idx = maintenances.value.findIndex(m => m.id === editing.value.id)
-      if (idx !== -1) maintenances.value[idx] = { ...editing.value, ...form }
+      if (idx !== -1) {
+        // Mantem os relacionamentos originais e atualiza apenas os campos alterados
+        maintenances.value[idx] = {
+          ...maintenances.value[idx],
+          ...res.data?.scheduled_maintenance,
+          driver: maintenances.value[idx].driver,
+          vehicle: maintenances.value[idx].vehicle,
+          mechanic: maintenances.value[idx].mechanic,
+        }
+      }
     } else {
       const res = await api.post('/api/scheduled-maintenances', form)
       maintenances.value.push(res.data?.scheduled_maintenance || { ...form, id: Date.now() })
     }
     closeModal()
-  } catch (e) { console.error('Erro ao salvar:', e); alert('Erro ao salvar.') }
+  } catch (e) {
+    const errors = e.response?.data?.errors
+    if (errors) {
+      validationErrors.value = errors
+    } else {
+      alert('Erro ao salvar. Verifique os dados e tente novamente.')
+    }
+  }
   finally { saving.value = false }
 }
 

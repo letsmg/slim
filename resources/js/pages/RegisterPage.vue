@@ -297,7 +297,11 @@ async function handleRegister() {
     })
 
     if (res.data?.success) {
+      const user = res.data?.user || {}
       sessionStorage.setItem('auth_token', res.data?.token || 'simulado')
+      sessionStorage.setItem('user_name', user.name || form.name)
+      sessionStorage.setItem('user_email', user.email || form.email)
+      sessionStorage.setItem('user_level', user.level || 'user')
       router.push('/dashboard')
     } else {
       error.value = res.data?.message || 'Erro ao cadastrar.'

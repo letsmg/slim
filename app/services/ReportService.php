@@ -7,8 +7,8 @@ use Dompdf\Dompdf;
 use Dompdf\Options;
 
 /**
- * Service de Report - Camada de lógica para relatórios
- * Orquestra a geração de relatórios a partir dos repositórios
+ * Service de Report - Camada de logica para relatorios
+ * Orquestra a geracao de relatorios a partir dos repositorios
  * Gera PDFs com DomPDF usando logo e nome do sistema
  */
 class ReportService
@@ -24,7 +24,7 @@ class ReportService
     }
 
     /**
-     * Lista todos os tipos de relatório disponíveis
+     * Lista todos os tipos de relatorio disponiveis
      * 
      * @return array
      */
@@ -33,43 +33,55 @@ class ReportService
         return [
             [
                 'id'          => 'general',
-                'name'        => 'Relatório Geral',
-                'description' => 'Estatísticas gerais do sistema (usuários e produtos)',
+                'name'        => 'Relatorio Geral',
+                'description' => 'Estatisticas gerais do sistema (usuarios, veiculos, viagens e manutencoes)',
             ],
             [
                 'id'          => 'users',
-                'name'        => 'Relatório de Usuários',
-                'description' => 'Detalhamento de usuários cadastrados e status',
+                'name'        => 'Relatorio de Usuarios',
+                'description' => 'Detalhamento de usuarios cadastrados e status',
             ],
             [
-                'id'          => 'products',
-                'name'        => 'Relatório de Produtos',
-                'description' => 'Detalhamento de produtos, estoque e preços',
+                'id'          => 'vehicles',
+                'name'        => 'Relatorio de Veiculos',
+                'description' => 'Detalhamento de veiculos cadastrados',
+            ],
+            [
+                'id'          => 'trips',
+                'name'        => 'Relatorio de Viagens',
+                'description' => 'Detalhamento de viagens por status',
+            ],
+            [
+                'id'          => 'maintenances',
+                'name'        => 'Relatorio de Manutencoes',
+                'description' => 'Detalhamento de manutencoes programadas',
             ],
         ];
     }
 
     /**
-     * Gera um relatório baseado no tipo
+     * Gera um relatorio baseado no tipo
      * 
-     * @param string $type Tipo do relatório (general, users, products)
+     * @param string $type Tipo do relatorio (general, users, vehicles, trips, maintenances)
      * @return array|null
      */
     public function generate(string $type): ?array
     {
         return match ($type) {
-            'general'  => $this->repository->getGeneralStats(),
-            'users'    => $this->repository->getUserReport(),
-            'products' => $this->repository->getProductReport(),
-            default    => null,
+            'general'      => $this->repository->getGeneralStats(),
+            'users'        => $this->repository->getUserReport(),
+            'vehicles'     => $this->repository->getVehicleReport(),
+            'trips'        => $this->repository->getTripReport(),
+            'maintenances' => $this->repository->getMaintenanceReport(),
+            default        => null,
         };
     }
 
     /**
-     * Gera um PDF do relatório e retorna o conteúdo binário
+     * Gera um PDF do relatorio e retorna o conteudo binario
      * 
-     * @param string $type Tipo do relatório
-     * @return string|null Conteúdo binário do PDF ou null se tipo inválido
+     * @param string $type Tipo do relatorio
+     * @return string|null Conteudo binario do PDF ou null se tipo invalido
      */
     public function generatePdf(string $type): ?string
     {
@@ -94,15 +106,192 @@ class ReportService
     }
 
     /**
-     * Monta o HTML do relatório com cabeçalho padronizado (logo + nome do sistema)
+     * Gera um CSV do relatorio para importacao no Power BI
+     * 
+     * @param string $type Tipo do relatorio
+     * @return string|null Conteudo do CSV ou null se tipo invalido
+     */
+    public function generateCsv(string $type): ?string
+    {
+        $data = $this->generate($type);
+        if ($data === null) {
+            return null;
+        }
+
+        return match ($type) {
+            'general'      => $this->buildGeneralCsv($data),
+            'users'        => $this->buildUserCsv($data),
+            'vehicles'     => $this->buildVehicleCsv($data),
+            'trips'        => $this->buildTripCsv($data),
+            'maintenances' => $this->buildMaintenanceCsv($data),
+            default        => null,
+        };
+    }
+
+    /**
+     * Escapa um valor para CSV (coloca entre aspas se necessario)
+     */
+    private function csvEscape(mixed $value): string
+    {
+        $value = (string) ($value ?? '');
+        // Se contiver aspas, virgula, quebra de linha, envolve em aspas duplas
+        if (str_contains($value, '"') || str_contains($value, ',') || str_contains($value, "\n") || str_contains($value, "\r")) {
+            $value = '"' . str_replace('"', '""', $value) . '"';
+        }
+        return $value;
+    }
+
+    /**
+     * Monta CSV do relatorio geral (estatisticas)
+     */
+    private function buildGeneralCsv(array $data): string
+    {
+        $u = $data['users'] ?? [];
+        $v = $data['vehicles'] ?? [];
+        $t = $data['trips'] ?? [];
+        $m = $data['maintenances'] ?? [];
+
+        $csv = "categoria,metrica,valor\n";
+        $csv .= "Usuarios,Total,{$this->csvEscape($u['total'] ?? 0)}\n";
+        $csv .= "Usuarios,Ativos,{$this->csvEscape($u['active'] ?? 0)}\n";
+        $csv .= "Usuarios,Bloqueados,{$this->csvEscape($u['blocked'] ?? 0)}\n";
+        $csv .= "Veiculos,Total,{$this->csvEscape($v['total'] ?? 0)}\n";
+        $csv .= "Veiculos,Ativos,{$this->csvEscape($v['active'] ?? 0)}\n";
+        $csv .= "Viagens,Total,{$this->csvEscape($t['total'] ?? 0)}\n";
+        $csv .= "Viagens,Pendentes,{$this->csvEscape($t['pending'] ?? 0)}\n";
+        $csv .= "Viagens,Em Andamento,{$this->csvEscape($t['in_progress'] ?? 0)}\n";
+        $csv .= "Viagens,Concluidas,{$this->csvEscape($t['completed'] ?? 0)}\n";
+        $csv .= "Viagens,No Mes,{$this->csvEscape($t['this_month'] ?? 0)}\n";
+        $csv .= "Manutencoes,Total,{$this->csvEscape($m['total'] ?? 0)}\n";
+        $csv .= "Manutencoes,Pendentes,{$this->csvEscape($m['pending'] ?? 0)}\n";
+        $csv .= "Manutencoes,Concluidas,{$this->csvEscape($m['completed'] ?? 0)}\n";
+        $csv .= "Manutencoes,No Mes,{$this->csvEscape($m['this_month'] ?? 0)}\n";
+        return $csv;
+    }
+
+    /**
+     * Monta CSV do relatorio de usuarios
+     */
+    private function buildUserCsv(array $data): string
+    {
+        $users = $data['recent_users'] ?? [];
+
+        $csv = "id,nome,email,nivel,ativo,criado_em,atualizado_em\n";
+        foreach ($users as $u) {
+            $csv .= implode(',', [
+                $this->csvEscape($u['id'] ?? ''),
+                $this->csvEscape($u['name'] ?? ''),
+                $this->csvEscape($u['email'] ?? ''),
+                $this->csvEscape($u['level'] ?? ''),
+                $this->csvEscape($u['active'] ?? ''),
+                $this->csvEscape($u['created_at'] ?? ''),
+                $this->csvEscape($u['updated_at'] ?? ''),
+            ]) . "\n";
+        }
+        return $csv;
+    }
+
+    /**
+     * Monta CSV do relatorio de veiculos
+     */
+    private function buildVehicleCsv(array $data): string
+    {
+        $vehicles = $data['recent_vehicles'] ?? [];
+
+        $csv = "id,marca,modelo,placa,eixos,crlv,chassi,renavam,combustivel,ultima_revisao,proxima_revisao,data_compra,criado_em,atualizado_em\n";
+        foreach ($vehicles as $v) {
+            $csv .= implode(',', [
+                $this->csvEscape($v['id'] ?? ''),
+                $this->csvEscape($v['brand'] ?? ''),
+                $this->csvEscape($v['model'] ?? ''),
+                $this->csvEscape($v['plate'] ?? ''),
+                $this->csvEscape($v['axles'] ?? ''),
+                $this->csvEscape($v['crlv'] ?? ''),
+                $this->csvEscape($v['chassis'] ?? ''),
+                $this->csvEscape($v['renavam'] ?? ''),
+                $this->csvEscape($v['fuel_type'] ?? ''),
+                $this->csvEscape($v['last_maintenance_date'] ?? ''),
+                $this->csvEscape($v['next_maintenance_date'] ?? ''),
+                $this->csvEscape($v['purchase_date'] ?? ''),
+                $this->csvEscape($v['created_at'] ?? ''),
+                $this->csvEscape($v['updated_at'] ?? ''),
+            ]) . "\n";
+        }
+        return $csv;
+    }
+
+    /**
+     * Monta CSV do relatorio de viagens
+     */
+    private function buildTripCsv(array $data): string
+    {
+        $trips = $data['recent_trips'] ?? [];
+
+        $csv = "id,origem,destino,status,motorista_id,veiculo_id,previsao_saida,previsao_chegada,saida_real,chegada_real,observacoes,criado_em,atualizado_em\n";
+        foreach ($trips as $t) {
+            $status = match ($t['status'] ?? '') {
+                'pending'     => 'Pendente',
+                'in_progress' => 'Em Andamento',
+                'completed'   => 'Concluida',
+                default       => $t['status'] ?? '',
+            };
+            $csv .= implode(',', [
+                $this->csvEscape($t['id'] ?? ''),
+                $this->csvEscape($t['origin'] ?? ''),
+                $this->csvEscape($t['destination'] ?? ''),
+                $this->csvEscape($status),
+                $this->csvEscape($t['driver_id'] ?? ''),
+                $this->csvEscape($t['vehicle_id'] ?? ''),
+                $this->csvEscape($t['departure_forecast'] ?? ''),
+                $this->csvEscape($t['arrival_forecast'] ?? ''),
+                $this->csvEscape($t['departure_real'] ?? ''),
+                $this->csvEscape($t['arrival_real'] ?? ''),
+                $this->csvEscape($t['observations'] ?? ''),
+                $this->csvEscape($t['created_at'] ?? ''),
+                $this->csvEscape($t['updated_at'] ?? ''),
+            ]) . "\n";
+        }
+        return $csv;
+    }
+
+    /**
+     * Monta CSV do relatorio de manutencoes
+     */
+    private function buildMaintenanceCsv(array $data): string
+    {
+        $maintenances = $data['recent_maintenances'] ?? [];
+
+        $csv = "id,servico,data_programada,concluida,observacoes,veiculo_id,mecanico_id,motorista_id,criado_em,atualizado_em\n";
+        foreach ($maintenances as $m) {
+            $completed = !empty($m['completed']) ? 'Sim' : 'Nao';
+            $csv .= implode(',', [
+                $this->csvEscape($m['id'] ?? ''),
+                $this->csvEscape($m['service'] ?? ''),
+                $this->csvEscape($m['scheduled_date'] ?? ''),
+                $this->csvEscape($completed),
+                $this->csvEscape($m['observations'] ?? ''),
+                $this->csvEscape($m['vehicle_id'] ?? ''),
+                $this->csvEscape($m['mechanic_id'] ?? ''),
+                $this->csvEscape($m['driver_id'] ?? ''),
+                $this->csvEscape($m['created_at'] ?? ''),
+                $this->csvEscape($m['updated_at'] ?? ''),
+            ]) . "\n";
+        }
+        return $csv;
+    }
+
+    /**
+     * Monta o HTML do relatorio com cabecalho padronizado (logo + nome do sistema)
      */
     private function buildHtml(string $type, array $data): string
     {
         $title = match ($type) {
-            'general'  => 'Relatório Geral',
-            'users'    => 'Relatório de Usuários',
-            'products' => 'Relatório de Produtos',
-            default    => 'Relatório',
+            'general'      => 'Relatorio Geral',
+            'users'        => 'Relatorio de Usuarios',
+            'vehicles'     => 'Relatorio de Veiculos',
+            'trips'        => 'Relatorio de Viagens',
+            'maintenances' => 'Relatorio de Manutencoes',
+            default        => 'Relatorio',
         };
 
         $generatedAt = $data['generated_at'] ?? date('Y-m-d H:i:s');
@@ -124,8 +313,14 @@ class ReportService
             case 'users':
                 $rows = $this->buildUserRows($data);
                 break;
-            case 'products':
-                $rows = $this->buildProductRows($data);
+            case 'vehicles':
+                $rows = $this->buildVehicleRows($data);
+                break;
+            case 'trips':
+                $rows = $this->buildTripRows($data);
+                break;
+            case 'maintenances':
+                $rows = $this->buildMaintenanceRows($data);
                 break;
         }
 
@@ -183,22 +378,36 @@ HTML;
     private function buildGeneralRows(array $data): string
     {
         $u = $data['users'] ?? [];
-        $p = $data['products'] ?? [];
+        $v = $data['vehicles'] ?? [];
+        $t = $data['trips'] ?? [];
+        $m = $data['maintenances'] ?? [];
 
         return '
         <table>
-            <tr><th colspan="2">Usuários</th></tr>
+            <tr><th colspan="2">Usuarios</th></tr>
             <tr><td>Total</td><td>' . ($u['total'] ?? 0) . '</td></tr>
             <tr><td>Ativos</td><td>' . ($u['active'] ?? 0) . '</td></tr>
             <tr><td>Bloqueados</td><td>' . ($u['blocked'] ?? 0) . '</td></tr>
         </table>
         <table>
-            <tr><th colspan="2">Produtos</th></tr>
-            <tr><td>Total</td><td>' . ($p['total'] ?? 0) . '</td></tr>
-            <tr><td>Ativos</td><td>' . ($p['active'] ?? 0) . '</td></tr>
-            <tr><td>Inativos</td><td>' . ($p['inactive'] ?? 0) . '</td></tr>
-            <tr><td>Estoque Total</td><td>' . ($p['total_stock'] ?? 0) . '</td></tr>
-            <tr><td>Preço Médio</td><td>R$ ' . number_format($p['avg_price'] ?? 0, 2, ',', '.') . '</td></tr>
+            <tr><th colspan="2">Veiculos</th></tr>
+            <tr><td>Total</td><td>' . ($v['total'] ?? 0) . '</td></tr>
+            <tr><td>Ativos</td><td>' . ($v['active'] ?? 0) . '</td></tr>
+        </table>
+        <table>
+            <tr><th colspan="2">Viagens</th></tr>
+            <tr><td>Total</td><td>' . ($t['total'] ?? 0) . '</td></tr>
+            <tr><td>Pendentes</td><td>' . ($t['pending'] ?? 0) . '</td></tr>
+            <tr><td>Em Andamento</td><td>' . ($t['in_progress'] ?? 0) . '</td></tr>
+            <tr><td>Concluidas</td><td>' . ($t['completed'] ?? 0) . '</td></tr>
+            <tr><td>No Mes</td><td>' . ($t['this_month'] ?? 0) . '</td></tr>
+        </table>
+        <table>
+            <tr><th colspan="2">Manutencoes</th></tr>
+            <tr><td>Total</td><td>' . ($m['total'] ?? 0) . '</td></tr>
+            <tr><td>Pendentes</td><td>' . ($m['pending'] ?? 0) . '</td></tr>
+            <tr><td>Concluidas</td><td>' . ($m['completed'] ?? 0) . '</td></tr>
+            <tr><td>No Mes</td><td>' . ($m['this_month'] ?? 0) . '</td></tr>
         </table>';
     }
 
@@ -214,7 +423,7 @@ HTML;
             <tr><td>Ativos</td><td>' . ($status['active'] ?? 0) . '</td></tr>
             <tr><td>Inativos</td><td>' . ($status['inactive'] ?? 0) . '</td></tr>
         </table>
-        <div style="margin-top:15px;font-weight:bold;font-size:13px;">Últimos Usuários</div>
+        <div style="margin-top:15px;font-weight:bold;font-size:13px;">Ultimos Usuarios</div>
         <table>
             <tr><th>Nome</th><th>E-mail</th><th>Cadastro</th></tr>';
 
@@ -229,29 +438,88 @@ HTML;
         return $html;
     }
 
-    private function buildProductRows(array $data): string
+    private function buildVehicleRows(array $data): string
     {
         $stats = $data['stats'] ?? [];
-        $products = $data['recent_products'] ?? [];
+        $vehicles = $data['recent_vehicles'] ?? [];
 
         $html = '
         <table>
             <tr><th colspan="2">Resumo</th></tr>
             <tr><td>Total</td><td>' . ($stats['total'] ?? 0) . '</td></tr>
             <tr><td>Ativos</td><td>' . ($stats['active'] ?? 0) . '</td></tr>
-            <tr><td>Inativos</td><td>' . ($stats['inactive'] ?? 0) . '</td></tr>
-            <tr><td>Estoque Total</td><td>' . ($stats['total_stock'] ?? 0) . '</td></tr>
-            <tr><td>Preço Médio</td><td>R$ ' . number_format($stats['avg_price'] ?? 0, 2, ',', '.') . '</td></tr>
         </table>
-        <div style="margin-top:15px;font-weight:bold;font-size:13px;">Últimos Produtos</div>
+        <div style="margin-top:15px;font-weight:bold;font-size:13px;">Ultimos Veiculos</div>
         <table>
-            <tr><th>Nome</th><th>Preço</th><th>Estoque</th></tr>';
+            <tr><th>Marca</th><th>Modelo</th><th>Placa</th></tr>';
 
-        foreach ($products as $p) {
-            $name = esc($p['name'] ?? '');
-            $price = 'R$ ' . number_format((float)($p['price'] ?? 0), 2, ',', '.');
-            $stock = esc((string)($p['stock'] ?? 0));
-            $html .= "<tr><td>{$name}</td><td>{$price}</td><td>{$stock}</td></tr>";
+        foreach ($vehicles as $v) {
+            $brand = esc($v['brand'] ?? '');
+            $model = esc($v['model'] ?? '');
+            $plate = esc($v['plate'] ?? '-');
+            $html .= "<tr><td>{$brand}</td><td>{$model}</td><td>{$plate}</td></tr>";
+        }
+
+        $html .= '</table>';
+        return $html;
+    }
+
+    private function buildTripRows(array $data): string
+    {
+        $stats = $data['stats'] ?? [];
+        $trips = $data['recent_trips'] ?? [];
+
+        $html = '
+        <table>
+            <tr><th colspan="2">Resumo</th></tr>
+            <tr><td>Total</td><td>' . ($stats['total'] ?? 0) . '</td></tr>
+            <tr><td>Pendentes</td><td>' . ($stats['pending'] ?? 0) . '</td></tr>
+            <tr><td>Em Andamento</td><td>' . ($stats['in_progress'] ?? 0) . '</td></tr>
+            <tr><td>Concluidas</td><td>' . ($stats['completed'] ?? 0) . '</td></tr>
+        </table>
+        <div style="margin-top:15px;font-weight:bold;font-size:13px;">Ultimas Viagens</div>
+        <table>
+            <tr><th>Origem</th><th>Destino</th><th>Status</th></tr>';
+
+        foreach ($trips as $t) {
+            $origin = esc($t['origin'] ?? '');
+            $destination = esc($t['destination'] ?? '');
+            $status = esc($t['status'] ?? '');
+            $statusLabel = match ($status) {
+                'pending'     => 'Pendente',
+                'in_progress' => 'Em Andamento',
+                'completed'   => 'Concluida',
+                default       => $status,
+            };
+            $html .= "<tr><td>{$origin}</td><td>{$destination}</td><td>{$statusLabel}</td></tr>";
+        }
+
+        $html .= '</table>';
+        return $html;
+    }
+
+    private function buildMaintenanceRows(array $data): string
+    {
+        $stats = $data['stats'] ?? [];
+        $maintenances = $data['recent_maintenances'] ?? [];
+
+        $html = '
+        <table>
+            <tr><th colspan="2">Resumo</th></tr>
+            <tr><td>Total</td><td>' . ($stats['total'] ?? 0) . '</td></tr>
+            <tr><td>Pendentes</td><td>' . ($stats['pending'] ?? 0) . '</td></tr>
+            <tr><td>Concluidas</td><td>' . ($stats['completed'] ?? 0) . '</td></tr>
+        </table>
+        <div style="margin-top:15px;font-weight:bold;font-size:13px;">Ultimas Manutencoes</div>
+        <table>
+            <tr><th>Servico</th><th>Data</th><th>Status</th></tr>';
+
+        foreach ($maintenances as $m) {
+            $service = esc($m['service'] ?? '');
+            $date = esc($m['scheduled_date'] ?? '');
+            $completed = !empty($m['completed']);
+            $statusLabel = $completed ? 'Concluida' : 'Pendente';
+            $html .= "<tr><td>{$service}</td><td>{$date}</td><td>{$statusLabel}</td></tr>";
         }
 
         $html .= '</table>';

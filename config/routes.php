@@ -22,6 +22,7 @@ return function ($app, $vehicleController, $driverController, $homeController, $
     $app->get('/api/users/{id}', [$userController, 'show']);
     $app->post('/api/users', [$userController, 'store']);
     $app->put('/api/users/{id}', [$userController, 'update']);
+    $app->put('/api/users/{id}/reset-password', [$userController, 'resetPassword']);
     $app->delete('/api/users/{id}', [$userController, 'destroy']);
 
     // Rotas da API - Veiculos
@@ -61,6 +62,8 @@ return function ($app, $vehicleController, $driverController, $homeController, $
 
     // Rotas da API - Relatorios
     $app->get('/api/reports', [$reportController, 'index']);
+    $app->get('/api/reports/{type}/pdf/view', [$reportController, 'pdfView']);
     $app->get('/api/reports/{type}/pdf', [$reportController, 'pdf']);
+    $app->get('/api/reports/{type}/csv', [$reportController, 'csv']);
     $app->get('/api/reports/{type}', [$reportController, 'show']);
 };

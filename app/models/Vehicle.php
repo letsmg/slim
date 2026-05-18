@@ -7,25 +7,25 @@ use Illuminate\Database\Eloquent\Model;
 class Vehicle extends Model
 {
     protected $fillable = [
-        'marca',
-        'modelo',
-        'placa',
-        'eixos',
+        'brand',
+        'model',
+        'plate',
+        'axles',
         'crlv',
-        'chassi',
+        'chassis',
         'renavam',
-        'tipo_combustivel',
-        'dt_ultima_revisao',
-        'dt_proxima_revisao',
-        'dt_compra',
+        'fuel_type',
+        'last_maintenance_date',
+        'next_maintenance_date',
+        'purchase_date',
         'photo1',
         'photo2',
         'photo3',
     ];
 
     protected $casts = [
-        'dt_ultima_revisao' => 'date',
-        'dt_proxima_revisao' => 'date',
-        'dt_compra' => 'date',
+        'last_maintenance_date' => 'date',
+        'next_maintenance_date' => 'date',
+        'purchase_date' => 'date',
     ];
 }

@@ -33,12 +33,12 @@ class VehicleRepository
     {
         $query = Vehicle::query();
 
-        if (!empty($filters['marca'])) {
-            $query->where('marca', 'like', '%' . $filters['marca'] . '%');
+        if (!empty($filters['brand'])) {
+            $query->where('brand', 'like', '%' . $filters['brand'] . '%');
         }
 
-        if (!empty($filters['modelo'])) {
-            $query->where('modelo', 'like', '%' . $filters['modelo'] . '%');
+        if (!empty($filters['model'])) {
+            $query->where('model', 'like', '%' . $filters['model'] . '%');
         }
 
         return $query->get();

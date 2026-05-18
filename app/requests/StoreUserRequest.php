@@ -53,9 +53,13 @@ class StoreUserRequest
             }
         }
 
-        if (!isset($data['password']) || $data['password'] === '') {
+        // Senha é obrigatória apenas na criação (ignoreId = null)
+        $isCreating = $this->ignoreId === null;
+        $hasPassword = isset($data['password']) && $data['password'] !== '';
+
+        if ($isCreating && !$hasPassword) {
             $errors['password'] = 'A senha é obrigatória.';
-        } elseif (strlen($data['password']) < 8) {
+        } elseif ($hasPassword && strlen($data['password']) < 8) {
             $errors['password'] = 'A senha deve ter no mínimo 8 caracteres.';
         } elseif (strlen($data['password']) > 128) {
             $errors['password'] = 'A senha deve ter no máximo 128 caracteres.';
@@ -70,8 +74,14 @@ class StoreUserRequest
         // Sanitiza saída
         $sanitized['name'] = sanitize_input($data['name']);
         $sanitized['email'] = sanitize_input($data['email']);
-        $sanitized['password'] = $data['password']; // será hasheado pelo mutator do model
-        $sanitized['level'] = $data['level'] ?? 'operational';
+        // Só inclui password se foi enviado (na edição pode ser omitido)
+        if ($hasPassword) {
+            $sanitized['password'] = $data['password']; // será hasheado pelo mutator do model
+        }
+        // Só inclui level se foi enviado (na edição pode ser omitido para não-admin)
+        if (isset($data['level']) && $data['level'] !== '') {
+            $sanitized['level'] = $data['level'];
+        }
         $sanitized['active'] = isset($data['active']) ? filter_var($data['active'], FILTER_VALIDATE_BOOLEAN) : true;
 
         return $sanitized;

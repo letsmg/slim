@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\ScheduledMaintenance;
 use App\Repositories\ScheduledMaintenanceRepository;
+use App\Requests\StoreScheduledMaintenanceRequest;
 
 /**
  * Service de ScheduledMaintenance - Regras de negócio para manutenções programadas
@@ -28,17 +29,9 @@ class ScheduledMaintenanceService
     {
         $data = sanitize_inputs($data);
 
-        $required = ['driver_id', 'vehicle_id', 'mechanic_id', 'scheduled_date'];
-        $errors = [];
-        foreach ($required as $field) {
-            if (empty($data[$field])) {
-                $errors[$field] = "O campo {$field} é obrigatório.";
-            }
-        }
-
-        if (!empty($errors)) {
-            throw new \InvalidArgumentException(json_encode(['errors' => $errors]));
-        }
+        // Valida com StoreScheduledMaintenanceRequest
+        $request = new StoreScheduledMaintenanceRequest();
+        $data = $request->validated($data);
 
         return $this->scheduledMaintenanceRepository->create($data);
     }
@@ -46,6 +39,11 @@ class ScheduledMaintenanceService
     public function update(ScheduledMaintenance $maintenance, array $data): ScheduledMaintenance
     {
         $data = sanitize_inputs($data);
+
+        // Valida com StoreScheduledMaintenanceRequest
+        $request = new StoreScheduledMaintenanceRequest();
+        $data = $request->validated($data);
+
         return $this->scheduledMaintenanceRepository->update($maintenance->id, $data);
     }
 

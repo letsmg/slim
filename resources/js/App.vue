@@ -28,8 +28,9 @@ const router = useRouter()
 
 const isAuthenticated = ref(false)
 const authUser = ref({
-    name: 'Luiz Eduardo',
-    email: 'luiz@exemplo.com',
+    name: sessionStorage.getItem('user_name') || 'Usuário',
+    email: sessionStorage.getItem('user_email') || '',
+    level: sessionStorage.getItem('user_level') || '',
 })
 
 provide('authUser', authUser)
@@ -41,6 +42,13 @@ watch(
     () => route.name,
     (name) => {
         isAuthenticated.value = authRoutes.includes(name)
+        // Atualiza dados do usuário do sessionStorage sempre que navega
+        if (isAuthenticated.value) {
+            authUser.value = {
+                name: sessionStorage.getItem('user_name') || 'Usuário',
+                email: sessionStorage.getItem('user_email') || '',
+            }
+        }
     },
     { immediate: true }
 )

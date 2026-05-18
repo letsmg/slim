@@ -35,3 +35,8 @@ node_modules/.vite/
 
 # Vite hot file (gerado automaticamente pelo npm run dev)
 public/hot
+
+# Assets compilados pelo Vite (gerados automaticamente no build)
+# Nao versionar - o deploy gera estes arquivos no CI/CD
+public/js/
+public/css/

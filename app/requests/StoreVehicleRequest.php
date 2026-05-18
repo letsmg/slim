@@ -5,44 +5,52 @@ namespace App\Requests;
 use App\Models\Vehicle;
 
 /**
- * Validação para criação/atualização de veículo
- * Segue ISO 27001: sanitização e validação rigorosa de entradas
- * Valida unicidade de placa, chassi e renavam
+ * Validacao para criacao/atualizacao de veiculo
+ * Segue ISO 27001: sanitizacao e validacao rigorosa de entradas
+ * Valida unicidade de plate, chassis e renavam
+ * Campos em ingles conforme regra do projeto (.clinerules)
  */
 class StoreVehicleRequest
 {
     private array $rules = [
-        'marca'             => 'required|string|max:100|sanitize',
-        'modelo'            => 'required|string|max:100|sanitize',
-        'placa'             => 'string|max:10|sanitize',
-        'eixos'             => 'integer|min:2|max:20',
-        'crlv'              => 'required|string|max:50|sanitize',
-        'chassi'            => 'string|max:50|sanitize',
-        'renavam'           => 'string|max:50|sanitize',
-        'tipo_combustivel'  => 'required|string|max:50|sanitize',
-        'dt_ultima_revisao' => 'date',
-        'dt_proxima_revisao'=> 'date',
-        'dt_compra'         => 'date',
+        'brand'                 => 'required|string|max:100|sanitize',
+        'model'                 => 'required|string|max:100|sanitize',
+        'plate'                 => 'string|max:10|sanitize',
+        'axles'                 => 'integer|min:2|max:20',
+        'crlv'                  => 'required|string|max:50|sanitize',
+        'chassis'               => 'string|max:50|sanitize',
+        'renavam'               => 'string|max:50|sanitize',
+        'fuel_type'             => 'required|string|max:50|sanitize',
+        'last_maintenance_date' => 'date',
+        'next_maintenance_date' => 'date',
+        'purchase_date'         => 'date',
+        'photo1'                => 'string',
+        'photo2'                => 'string',
+        'photo3'                => 'string',
+        'photo4'                => 'string',
+        'photo5'                => 'string',
+        'photo6'                => 'string',
+        'antt_photo'            => 'string',
     ];
 
     private array $messages = [
-        'marca.required'            => 'A marca é obrigatória.',
-        'marca.max'                 => 'A marca deve ter no máximo 100 caracteres.',
-        'modelo.required'           => 'O modelo é obrigatório.',
-        'modelo.max'                => 'O modelo deve ter no máximo 100 caracteres.',
-        'placa.max'                 => 'A placa deve ter no máximo 10 caracteres.',
-        'eixos.integer'             => 'O número de eixos deve ser um valor inteiro.',
-        'eixos.min'                 => 'O número mínimo de eixos é 2.',
-        'eixos.max'                 => 'O número máximo de eixos é 20.',
-        'crlv.required'             => 'O CRLV é obrigatório.',
-        'crlv.max'                  => 'O CRLV deve ter no máximo 50 caracteres.',
-        'chassi.max'                => 'O chassi deve ter no máximo 50 caracteres.',
-        'renavam.max'               => 'O Renavam deve ter no máximo 50 caracteres.',
-        'tipo_combustivel.required' => 'O tipo de combustível é obrigatório.',
-        'tipo_combustivel.max'      => 'O tipo de combustível deve ter no máximo 50 caracteres.',
-        'dt_ultima_revisao.date'    => 'Informe uma data válida para última revisão.',
-        'dt_proxima_revisao.date'   => 'Informe uma data válida para próxima revisão.',
-        'dt_compra.date'            => 'Informe uma data válida para compra.',
+        'brand.required'                 => 'A marca e obrigatoria.',
+        'brand.max'                      => 'A marca deve ter no maximo 100 caracteres.',
+        'model.required'                 => 'O modelo e obrigatorio.',
+        'model.max'                      => 'O modelo deve ter no maximo 100 caracteres.',
+        'plate.max'                      => 'A placa deve ter no maximo 10 caracteres.',
+        'axles.integer'                  => 'O numero de eixos deve ser um valor inteiro.',
+        'axles.min'                      => 'O numero minimo de eixos e 2.',
+        'axles.max'                      => 'O numero maximo de eixos e 20.',
+        'crlv.required'                  => 'O CRLV e obrigatorio.',
+        'crlv.max'                       => 'O CRLV deve ter no maximo 50 caracteres.',
+        'chassis.max'                    => 'O chassi deve ter no maximo 50 caracteres.',
+        'renavam.max'                    => 'O Renavam deve ter no maximo 50 caracteres.',
+        'fuel_type.required'             => 'O tipo de combustivel e obrigatorio.',
+        'fuel_type.max'                  => 'O tipo de combustivel deve ter no maximo 50 caracteres.',
+        'last_maintenance_date.date'     => 'Informe uma data valida para ultima revisao.',
+        'next_maintenance_date.date'     => 'Informe uma data valida para proxima revisao.',
+        'purchase_date.date'             => 'Informe uma data valida para compra.',
     ];
 
     private ?int $ignoreId = null;
@@ -67,7 +75,7 @@ class StoreVehicleRequest
                 }
 
                 if ($rule === 'required' && ($value === null || $value === '')) {
-                    $errors[$field] = $this->messages["{$field}.required"] ?? "O campo {$field} é obrigatório.";
+                    $errors[$field] = $this->messages["{$field}.required"] ?? "O campo {$field} e obrigatorio.";
                     break;
                 }
 
@@ -78,7 +86,7 @@ class StoreVehicleRequest
 
                 if ($rule === 'integer' && $value !== null && $value !== '') {
                     if (!filter_var($value, FILTER_VALIDATE_INT)) {
-                        $errors[$field] = $this->messages["{$field}.integer"] ?? "O campo {$field} deve ser um número inteiro.";
+                        $errors[$field] = $this->messages["{$field}.integer"] ?? "O campo {$field} deve ser um numero inteiro.";
                         break;
                     }
                     $value = (int) $value;
@@ -87,7 +95,7 @@ class StoreVehicleRequest
                 if (str_starts_with($rule, 'min:')) {
                     $min = (int) substr($rule, 4);
                     if (is_numeric($value) && $value < $min) {
-                        $errors[$field] = $this->messages["{$field}.min"] ?? "O campo {$field} deve ser no mínimo {$min}.";
+                        $errors[$field] = $this->messages["{$field}.min"] ?? "O campo {$field} deve ser no minimo {$min}.";
                         break;
                     }
                 }
@@ -95,7 +103,7 @@ class StoreVehicleRequest
                 if (str_starts_with($rule, 'max:')) {
                     $max = (int) substr($rule, 4);
                     if (is_string($value) && strlen($value) > $max) {
-                        $errors[$field] = $this->messages["{$field}.max"] ?? "O campo {$field} deve ter no máximo {$max} caracteres.";
+                        $errors[$field] = $this->messages["{$field}.max"] ?? "O campo {$field} deve ter no maximo {$max} caracteres.";
                         break;
                     }
                 }
@@ -103,7 +111,7 @@ class StoreVehicleRequest
                 if ($rule === 'date' && $value !== null && $value !== '') {
                     $d = \DateTime::createFromFormat('Y-m-d', $value);
                     if (!$d || $d->format('Y-m-d') !== $value) {
-                        $errors[$field] = $this->messages["{$field}.date"] ?? "Informe uma data válida (AAAA-MM-DD).";
+                        $errors[$field] = $this->messages["{$field}.date"] ?? "Informe uma data valida (AAAA-MM-DD).";
                         break;
                     }
                 }
@@ -114,8 +122,8 @@ class StoreVehicleRequest
             }
         }
 
-        // Valida unicidade de placa, chassi e renavam
-        $uniqueFields = ['placa', 'chassi', 'renavam'];
+        // Valida unicidade de plate, chassis e renavam
+        $uniqueFields = ['plate', 'chassis', 'renavam'];
         foreach ($uniqueFields as $field) {
             if (!empty($data[$field])) {
                 $query = Vehicle::where($field, $data[$field]);
@@ -124,11 +132,11 @@ class StoreVehicleRequest
                 }
                 if ($query->exists()) {
                     $labels = [
-                        'placa' => 'placa',
-                        'chassi' => 'chassi',
+                        'plate' => 'placa',
+                        'chassis' => 'chassi',
                         'renavam' => 'renavam',
                     ];
-                    $errors[$field] = "Este {$labels[$field]} já está cadastrado em outro veículo.";
+                    $errors[$field] = "Este(a) {$labels[$field]} ja esta cadastrado(a) em outro veiculo.";
                 }
             }
         }

@@ -50,7 +50,8 @@ class ScheduledMaintenanceRepository
         }
         $maintenance->fill($data);
         $maintenance->save();
-        return $maintenance;
+        // Recarrega os relacionamentos para garantir que o retorno tenha os dados completos
+        return $maintenance->load(['driver', 'vehicle', 'mechanic']);
     }
 
     public function delete(int $id): bool
