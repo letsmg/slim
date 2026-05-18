@@ -129,11 +129,12 @@ const router = createRouter({
 })
 
 /**
- * Guard de navegação: protege rotas autenticadas e atualiza título
+ * Guard de navegação: protege rotas e redireciona conforme autenticação
  * 
  * Regras:
- * - Rotas com meta.auth = true só podem ser acessadas com sessão ativa
- * - Se não houver sessão, redireciona para a página principal (/)
+ * - Rotas com meta.auth = true  → só acessíveis com sessão ativa (redireciona para / se não logado)
+ * - Rotas com meta.auth = false → só acessíveis sem sessão ativa (redireciona para /dashboard se logado)
+ * - Rotas sem meta.auth definido → livres (ex: 404)
  * - A sessão é verificada via sessionStorage (setada no login)
  */
 router.beforeEach((to, from, next) => {
@@ -142,13 +143,16 @@ router.beforeEach((to, from, next) => {
         ? `${to.meta.title} | Slim App`
         : 'Slim App'
 
-    // Verifica se a rota requer autenticação
-    if (to.meta?.auth) {
-        const isAuthenticated = sessionStorage.getItem('auth_token') || false
-        if (!isAuthenticated) {
-            // Redireciona para a página principal se não estiver logado
-            return next({ name: 'home' })
-        }
+    const isAuthenticated = !!sessionStorage.getItem('auth_token')
+
+    // Se a rota requer autenticação e o usuário não está logado → redireciona para home
+    if (to.meta?.auth === true && !isAuthenticated) {
+        return next({ name: 'home' })
+    }
+
+    // Se a rota é pública (auth: false) e o usuário está logado → redireciona para dashboard
+    if (to.meta?.auth === false && isAuthenticated) {
+        return next({ name: 'dashboard' })
     }
 
     next()
