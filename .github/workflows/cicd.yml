@@ -29,7 +29,7 @@ jobs:
       - name: 📦 Instalar dependências do Node e Rodar Builds do Frontend
         run: |
           npm ci
-          npm run prod
+          npm run deploy
           node -e "const fs = require('fs'); fs.copyFileSync('resources/index.html', 'public/index.html');"
 
       - name: 🤐 Criar Pacote de Deploy Estruturado

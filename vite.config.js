@@ -5,13 +5,9 @@ import tailwindcss from '@tailwindcss/vite'
 export default defineConfig({
     server: {
         port: 5175,
-        // Permite que o Vite sirva arquivos de fora do root (necessário para links simbólicos)
-        fs: {
-            allow: ['..'],
-        },
         // HMR via WebSocket para recarregamento em tempo real
         watch: {
-            usePolling: true, // Força polling no Windows para detectar alterações
+            usePolling: true,
             interval: 100,
         },
     },
@@ -24,16 +20,16 @@ export default defineConfig({
         vue(),
         tailwindcss(),
     ],
-    root: 'resources',
+    // Root na raiz do projeto para watch funcionar corretamente
+    root: '.',
     base: '/',
-    // publicDir removido para não conflitar com outDir - os assets estáticos
-    // (imagens, etc) são servidos pelo PHP via link simbólico public/imgs -> storage/imgs
+    publicDir: false,
 
     css: {
         devSourcemap: true,
     },
     build: {
-        outDir: '../public',
+        outDir: 'public',
         emptyOutDir: false,
         manifest: true,
         rollupOptions: {
@@ -55,18 +51,18 @@ export default defineConfig({
     },
     resolve: {
         alias: {
-            '@': '/js',
-            '@pages': '/js/pages',
-            '@layouts': '/js/layouts',
-            '@components': '/js/components',
-            '@user': '/js/pages/user',
-            '@product': '/js/pages/product',
-            '@report': '/js/pages/report',
-            '@vehicle': '/js/pages/vehicle',
-            '@driver': '/js/pages/driver',
-            '@mechanic': '/js/pages/mechanic',
-            '@trip': '/js/pages/trip',
-            '@maintenance': '/js/pages/maintenance',
+            '@': '/resources/js',
+            '@pages': '/resources/js/pages',
+            '@layouts': '/resources/js/layouts',
+            '@components': '/resources/js/components',
+            '@user': '/resources/js/pages/user',
+            '@product': '/resources/js/pages/product',
+            '@report': '/resources/js/pages/report',
+            '@vehicle': '/resources/js/pages/vehicle',
+            '@driver': '/resources/js/pages/driver',
+            '@mechanic': '/resources/js/pages/mechanic',
+            '@trip': '/resources/js/pages/trip',
+            '@maintenance': '/resources/js/pages/maintenance',
         },
     },
 })
