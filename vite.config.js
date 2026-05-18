@@ -4,36 +4,40 @@ import tailwindcss from '@tailwindcss/vite'
 import fs from 'fs'
 import path from 'path'
 
-// Plugin customizado para forçar HMR via fs.watchFile no Windows
-function hmrPollingPlugin() {
+// Plugin que força o Vite a detectar mudanças via polling manual
+function forceWatchPlugin() {
     let server = null
-    const watchedFiles = new Map() // path -> mtime
+    const watchedFiles = new Map()
 
-    function watchDir(dir) {
+    function scanDir(dir) {
         if (!fs.existsSync(dir)) return
-        const entries = fs.readdirSync(dir, { withFileTypes: true })
-        for (const entry of entries) {
-            const fullPath = path.join(dir, entry.name)
-            if (entry.isDirectory()) {
-                if (entry.name !== 'node_modules' && entry.name !== 'public') {
-                    watchDir(fullPath)
+        try {
+            const entries = fs.readdirSync(dir, { withFileTypes: true })
+            for (const entry of entries) {
+                const fullPath = path.join(dir, entry.name)
+                if (entry.isDirectory()) {
+                    if (entry.name !== 'node_modules' && !entry.name.startsWith('.')) {
+                        scanDir(fullPath)
+                    }
+                } else if (/\.(vue|js|ts|css)$/.test(entry.name)) {
+                    try {
+                        watchedFiles.set(fullPath, fs.statSync(fullPath).mtimeMs)
+                    } catch { }
                 }
-            } else if (/\.(vue|js|ts|css)$/.test(entry.name)) {
-                watchedFiles.set(fullPath, fs.statSync(fullPath).mtimeMs)
             }
-        }
+        } catch { }
     }
 
     return {
-        name: 'hmr-polling',
+        name: 'force-watch',
         configureServer(_server) {
             server = _server
 
-            // Escaneia os diretórios iniciais
-            watchDir(path.resolve('resources/js'))
-            watchDir(path.resolve('resources/css'))
+            // Escaneia os diretórios de origem
+            scanDir(path.resolve('resources/js'))
+            scanDir(path.resolve('resources/css'))
 
-            console.log(`[HMR] Observando ${watchedFiles.size} arquivos...`)
+            console.log(`[Vite] Observando ${watchedFiles.size} arquivos via polling...`)
 
             // Polling a cada 200ms
             setInterval(() => {
@@ -42,17 +46,19 @@ function hmrPollingPlugin() {
                         const stat = fs.statSync(filePath)
                         if (stat.mtimeMs > oldMtime) {
                             watchedFiles.set(filePath, stat.mtimeMs)
-                            console.log(`[HMR] Alterado: ${path.relative('', filePath)}`)
+                            const relativePath = path.relative('resources', filePath).replace(/\\/g, '/')
+                            console.log(`[Vite] Alterado: ${relativePath}`)
+
+                            // Forca reload completo via WebSocket
                             if (server && server.ws) {
                                 server.ws.send({
                                     type: 'full-reload',
                                     path: '*',
                                 })
                             }
-                            break // Uma alteração por vez é suficiente
+                            return // Processa uma mudanca por vez
                         }
                     } catch {
-                        // Arquivo pode ter sido deletado
                         watchedFiles.delete(filePath)
                     }
                 }
@@ -64,12 +70,11 @@ function hmrPollingPlugin() {
 export default defineConfig({
     server: {
         port: 5175,
-        // Escuta em todas as interfaces (IPv4 e IPv6)
         host: '0.0.0.0',
         fs: {
             allow: ['..'],
         },
-        watch: null, // Desabilita o watch padrão do Vite
+        watch: null, // Desabilita watch padrao, usamos o plugin
         hmr: {
             protocol: 'ws',
             host: 'localhost',
@@ -83,7 +88,7 @@ export default defineConfig({
     plugins: [
         vue(),
         tailwindcss(),
-        hmrPollingPlugin(),
+        forceWatchPlugin(),
     ],
     root: 'resources',
     base: '/',

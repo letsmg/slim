@@ -2,17 +2,33 @@
 
 namespace App\Controllers;
 
+use mindplay\vite\Manifest;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
 class HomeController
 {
+    private Manifest $vite;
+
+    public function __construct()
+    {
+        // Detecta se está em modo dev (Vite rodando) ou produção
+        $isDev = $this->isViteRunning();
+
+        // Caminho do manifest.json gerado pelo Vite no build de produção
+        $manifestPath = __DIR__ . '/../../public/manifest.json';
+
+        // Base path dos assets (deve bater com o 'base' do vite.config.js)
+        $basePath = '/';
+
+        $this->vite = new Manifest($isDev, $manifestPath, $basePath);
+    }
+
     /**
      * Página inicial - serve o SPA (Vue.js)
-     * Renderiza o index.html com os assets compilados pelo Vite
-     * 
-     * Em modo dev (Vite rodando), injeta os scripts do Vite Dev Server
-     * Em produção, usa os arquivos compilados em /js/app.js e /css/app.css
+     * Renderiza o index.html com os assets gerenciados pelo Vite
+     * Em dev: injeta scripts do Vite Dev Server (HMR)
+     * Em produção: usa manifest.json para cache busting
      */
     public function index(Request $request, Response $response): Response
     {
@@ -24,27 +40,15 @@ class HomeController
 
         $html = file_get_contents($htmlPath);
 
-        // Verifica se o Vite Dev Server está rodando (modo desenvolvimento)
-        $viteRunning = $this->isViteRunning();
+        // Gera as tags do Vite para o entry point 'js/app.js'
+        $tags = $this->vite->createTags('js/app.js');
 
-        if ($viteRunning) {
-            // Modo dev: injeta os scripts do Vite Dev Server
-            // O Vite injeta automaticamente o client HMR e processa os módulos
-            $viteScript = '<script type="module" src="http://localhost:5175/@vite/client"></script>';
-            $viteScript .= "\n    <script type=\"module\" src=\"http://localhost:5175/js/app.js\"></script>";
-
-            // Remove os links de CSS/JS estáticos e adiciona os do Vite
-            $html = preg_replace(
-                '/<link rel="stylesheet" href="\/css\/app\.css" \/>/',
-                '',
-                $html
-            );
-            $html = preg_replace(
-                '/<script type="module" src="\/js\/app\.js"><\/script>/',
-                $viteScript,
-                $html
-            );
-        }
+        // Substitui os placeholders no HTML
+        $html = str_replace(
+            ['<!-- VITE_JS -->', '<!-- VITE_CSS -->'],
+            [$tags->js, $tags->css],
+            $html
+        );
 
         $response->getBody()->write($html);
         return $response->withHeader('Content-Type', 'text/html; charset=utf-8');
@@ -52,7 +56,7 @@ class HomeController
 
     /**
      * Verifica se o Vite Dev Server está rodando
-     * Tenta conectar em IPv4 (127.0.0.1) e IPv6 (::1)
+     * Tenta conectar na porta 5175 (IPv4 e IPv6)
      */
     private function isViteRunning(): bool
     {
